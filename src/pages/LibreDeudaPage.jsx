@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import React, { useState } from 'react'
 import { Button, FileInput, Label, TextInput } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
@@ -148,13 +147,10 @@ export default function LibreDeudaPage () {
                         resetFiltro={!enabled}
                         onSelectVehiculo={(vehiculo) => {
                           setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo.vehiculo_id }))
-
-                          // Verifica si el titular existe antes de acceder a sus propiedades
                           const titular = vehiculo.titular || {}
 
-                          // Actualiza el estado correctamente con un nuevo objeto
                           setFormData({
-                            ...formData, // Mantiene los datos anteriores
+                            ...formData,
                             dominio: vehiculo.dominio || '',
                             marca: vehiculo.marca || '',
                             modelo: vehiculo.modelo || '',
@@ -188,6 +184,25 @@ export default function LibreDeudaPage () {
                         value={formData.modelo || ''}
                         onChange={handleInputChange}
                       />
+
+                      <TextInput
+                        name='tipo'
+                        placeholder='Tipo'
+                        className='mb-3'
+                        value={formData.tipo || ''}
+                        readOnly
+                      />
+
+                      {/* Mostrar campo "Número de Licencia" solo si el tipo es "SERVICIOS PÚBLICOS" */}
+                      {formData.tipo === 'SERVICIOS PúBLICOS' && (
+                        <TextInput
+                          name='numero_licencia'
+                          placeholder='Número de Licencia'
+                          className='mb-3'
+                          value={formData.numero_licencia || ''}
+                          onChange={handleInputChange}
+                        />
+                      )}
 
                       {/* Titular del Vehículo */}
 
