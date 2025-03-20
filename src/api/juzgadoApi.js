@@ -6,7 +6,8 @@ const juzgadoApi = axios.create({
 
 juzgadoApi.interceptors.request.use(config => {
   config.headers = {
-    ...config.headers
+    ...config.headers,
+    Authorization: `Bearer ${localStorage.getItem('token')}`
   }
 
   return config

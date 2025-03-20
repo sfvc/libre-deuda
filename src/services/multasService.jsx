@@ -20,3 +20,13 @@ export const getActaById = async (filters) => {
   const { data } = response.data
   return data
 }
+
+export const getTipos = async () => {
+  const response = await juzgadoApi.get('vehiculos-data')
+  return response.data.tipo
+}
+
+export const getMarcas = async () => {
+  const response = await juzgadoApi.get('vehiculos-data')
+  return response.data.marcas
+}

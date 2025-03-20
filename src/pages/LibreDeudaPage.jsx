@@ -1,20 +1,62 @@
 import React, { useState } from 'react'
-import { Button, FileInput, Label, TextInput } from 'flowbite-react'
+import { Alert, Button, FileInput, Label, Select, TextInput } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
 import { getActasFilter } from '@/services/multasService'
+import { getTipos } from '../services/multasService'
 import DefaultNavbar from '../assets/layout/DefaultNavbar'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
-import ReCAPTCHA from 'react-google-recaptcha'
-import Loading from '@/Loading'
 import SearchInfractor from '@/assets/components/SearchInfractor'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
+import SearchMarca from '../assets/components/SearchMarca'
+import ReCAPTCHA from 'react-google-recaptcha'
+import Loading from '@/Loading'
 
 export default function LibreDeudaPage () {
   const [formType, setFormType] = useState('persona')
   const [captchaVerified, setCaptchaVerified] = useState(false)
-  const [formData, setFormData] = useState({})
+  const [shouldDisableFields, setShouldDisableFields] = useState(true)
+  const [isValidated, setIsValidated] = useState(false)
+  const [, setHasSearched] = useState(false)
   const [enabled, setEnabled] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false)
+  const [formData, setFormData] = useState({
+    dominio: '',
+    marca: '',
+    marca_id: '',
+    modelo: '',
+    tipo: '',
+    color: '',
+    numero_chasis: '',
+    numero_motor: '',
+    numero_taxi_remis: '',
+    nombre: '',
+    apellido: '',
+    email: '',
+    telefono: ''
+  })
+  const isFormComplete = () => {
+    if (formType === 'persona') {
+      return (
+        formData.nombre &&
+        formData.apellido &&
+        formData.email &&
+        formData.telefono &&
+        captchaVerified
+      )
+    } else if (formType === 'vehiculo') {
+      return (
+        formData.dominio &&
+        formData.marca &&
+        formData.modelo &&
+        formData.tipo &&
+        formData.nombre &&
+        formData.apellido &&
+        formData.email &&
+        formData.telefono &&
+        captchaVerified
+      )
+    }
+    return false
+  }
   const [filters, setFilters] = useState({
     persona_id: '',
     numero_acta: '',
@@ -25,6 +67,11 @@ export default function LibreDeudaPage () {
     queryKey: ['actas', filters],
     queryFn: () => getActasFilter(filters),
     enabled
+  })
+
+  const { data: tipos, isLoading: isLoadingTipos, error: errorTipos } = useQuery({
+    queryKey: ['tipos'],
+    queryFn: getTipos
   })
 
   const handleCaptchaChange = (value) => {
@@ -39,11 +86,67 @@ export default function LibreDeudaPage () {
     }))
   }
 
+  const handlePersonaSelect = (persona) => {
+    setFilters((prev) => ({ ...prev, persona_id: persona.persona_id }))
+
+    setFormData((prev) => ({
+      ...prev,
+      nombre: persona?.nombre || '',
+      apellido: persona?.apellido || '',
+      email: persona.email || '',
+      telefono: persona.telefono || ''
+    }))
+
+    setShouldDisableFields(persona.email !== null && persona.telefono !== null)
+  }
+
+  const handleVehiculoSelect = (vehiculo) => {
+    setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo.id }))
+
+    setFormData((prev) => ({
+      ...prev,
+      dominio: vehiculo?.dominio || '',
+      marca: vehiculo?.marca?.nombre || '',
+      marca_id: vehiculo?.marca?.id || '',
+      modelo: vehiculo?.modelo || '',
+      tipo: vehiculo?.tipo?.nombre || '',
+      color: vehiculo?.color?.nombre || '',
+      numero_chasis: vehiculo?.numero_chasis || '',
+      numero_motor: vehiculo?.numero_motor || '',
+      numero_taxi_remis: vehiculo?.numero_taxi_remis || '',
+      nombre: vehiculo?.titular ? vehiculo.titular.nombre || '' : '',
+      apellido: vehiculo?.titular ? vehiculo.titular.apellido || '' : '',
+      email: vehiculo?.titular ? vehiculo.titular.email || '' : '',
+      telefono: vehiculo?.titular ? vehiculo.titular.telefono || '' : ''
+    }))
+
+    setShouldDisableFields(
+      vehiculo.titular &&
+      (vehiculo.titular.nombre && vehiculo.titular.apellido && vehiculo.titular.email && vehiculo.titular.telefono && !!vehiculo?.marca && !!vehiculo?.modelo && !!vehiculo?.tipo)
+    )
+  }
+
+  const hasUnpaidOrPending = () => {
+    if (isLoading) {
+      return <Loading />
+    }
+
+    if (Array.isArray(data?.data)) {
+      const filteredData = data.data.filter((multa) => {
+        const estado = multa?.estados?.[0]?.nombre?.toLowerCase()
+        return estado !== 'pagada' && estado !== 'terminada'
+      })
+      return filteredData.length > 0
+    }
+    return false
+  }
+
   const handleSubmit = () => {
     setEnabled(false)
     setTimeout(() => {
       setEnabled(true)
       setHasSearched(true)
+      setIsValidated(true)
     }, 0)
   }
 
@@ -62,14 +165,14 @@ export default function LibreDeudaPage () {
             <Button
               onClick={() => setFormType('persona')}
               className={`px-6 py-2 rounded-lg transition ${formType === 'persona' ? 'bg-blue-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-black hover:text-white'
-                                }`}
+                }`}
             >
               Persona
             </Button>
             <Button
               onClick={() => setFormType('vehiculo')}
               className={`px-6 py-2 rounded-lg transition ${formType === 'vehiculo' ? 'bg-blue-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-black hover:text-white'
-                                }`}
+                }`}
             >
               Vehículo
             </Button>
@@ -80,6 +183,9 @@ export default function LibreDeudaPage () {
               <h3 className='text-xl font-semibold text-gray-700 mb-4'>
                 {formType === 'persona' ? 'Datos de la Persona' : 'Datos del Vehículo'}
               </h3>
+              <p className='text-black mb-4'>
+                Si el email o teléfono no está completado al buscar, por favor, completalo para validarlo correctamente.
+              </p>
 
               <div className='w-full'>
                 {formType === 'persona'
@@ -87,119 +193,132 @@ export default function LibreDeudaPage () {
                     <>
                       <SearchInfractor
                         resetFiltro={!enabled}
-                        onSelectPersona={(persona) => {
-                          setFilters((prev) => ({ ...prev, persona_id: persona.persona_id }))
-                          setFormData({
-                            nombre: persona?.nombre || '',
-                            apellido: persona?.apellido || '',
-                            email: persona.email || '',
-                            telefono: persona.telefono || ''
-                          })
-                        }}
+                        onSelectPersona={handlePersonaSelect}
                       />
 
                       <TextInput
                         name='nombre'
                         placeholder='Nombre'
-                        className='mb-3'
+                        className={`mb-3 ${formData.nombre ? 'text-blue-500' : ''}`}
                         value={formData.nombre || ''}
                         onChange={handleInputChange}
+                        disabled
                       />
 
                       <TextInput
                         name='apellido'
                         placeholder='Apellido'
-                        className='mb-3'
+                        className={`mb-3 ${formData.apellido ? 'text-blue-500' : ''}`}
                         value={formData.apellido || ''}
                         onChange={handleInputChange}
+                        disabled
                       />
 
                       <TextInput
-                        name='correo'
+                        name='email'
                         placeholder='Correo Electrónico'
                         type='email'
-                        className='mb-3'
+                        className={`mb-3 ${formData.email ? 'text-blue-500' : ''}`}
                         value={formData.email || ''}
                         onChange={handleInputChange}
+                        disabled={shouldDisableFields}
                       />
 
                       <TextInput
                         name='telefono'
                         placeholder='Teléfono'
                         type='tel'
-                        className='mb-3'
+                        className={`mb-3 ${formData.telefono ? 'text-blue-500' : ''}`}
                         value={formData.telefono || ''}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          handleInputChange({ target: { name: 'telefono', value } })
+                        }}
+                        disabled={shouldDisableFields}
                       />
 
                       <div>
                         <div className='mb-2 block'>
                           <Label className='text-xl text-gray-500' htmlFor='file-upload' value='Foto del DNI del Titular' />
                         </div>
-                        <FileInput name='archivo_dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} />
+                        <FileInput name='archivo_dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
-
                     </>
                     )
                   : (
                     <>
                       <SearchVehiculo
                         resetFiltro={!enabled}
-                        onSelectVehiculo={(vehiculo) => {
-                          setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo.vehiculo_id }))
-                          const titular = vehiculo.titular || {}
-
-                          setFormData({
-                            ...formData,
-                            dominio: vehiculo.dominio || '',
-                            marca: vehiculo.marca || '',
-                            modelo: vehiculo.modelo || '',
-                            tipo: vehiculo.tipo || '',
-                            color: vehiculo.color || '',
-                            numero_chasis: vehiculo.numero_chasis || '',
-                            numero_motor: vehiculo.numero_motor || '',
-                            numero_taxi_remis: vehiculo.numero_taxi_remis || '',
-
-                            // Datos del titular extraídos del vehículo
-                            nombre: titular.nombre || '',
-                            apellido: titular.apellido || '',
-                            correo: titular.email || '',
-                            telefono: titular.telefono || ''
-                          })
-                        }}
+                        onSelectVehiculo={handleVehiculoSelect}
                       />
 
-                      <TextInput
-                        name='marca'
-                        placeholder='Marca'
-                        className='mb-3'
-                        value={formData.marca || ''}
-                        onChange={handleInputChange}
-                      />
+                      {formData.marca
+                        ? (
+                          <TextInput
+                            name='marca'
+                            placeholder='Marca del Vehículo'
+                            className='mb-3'
+                            value={formData.marca || ''}
+                            onChange={handleInputChange}
+                          />
+                          )
+                        : (
+                          <SearchMarca
+                            resetFiltro={!enabled}
+                            disabled={shouldDisableFields}
+                            onSelectMarca={(marca) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                marca: marca?.nombre || '',
+                                marca_id: marca?.id || ''
+                              }))
+                            }}
+                          />
+                          )}
+
+                      <input type='hidden' name='marca_id' value={formData.marca_id || ''} disabled={shouldDisableFields} />
 
                       <TextInput
                         name='modelo'
-                        placeholder='Modelo'
+                        placeholder='Modelo del Vehículo'
                         className='mb-3'
                         value={formData.modelo || ''}
                         onChange={handleInputChange}
+                        disabled={shouldDisableFields}
                       />
 
-                      <TextInput
+                      <Select
                         name='tipo'
-                        placeholder='Tipo'
                         className='mb-3'
                         value={formData.tipo || ''}
-                        readOnly
-                      />
+                        onChange={handleInputChange}
+                        disabled={shouldDisableFields}
+                      >
+                        <option value=''>Seleccione el Tipo de Vehículo</option>
+                        {isLoadingTipos
+                          ? (
+                            <option>Cargando...</option>
+                            )
+                          : errorTipos
+                            ? (
+                              <option>Error al cargar</option>
+                              )
+                            : (
+                                tipos.map((tipo) => (
+                                  <option key={tipo.id} value={tipo.nombre}>
+                                    {tipo.nombre}
+                                  </option>
+                                ))
+                              )}
+                      </Select>
 
-                      {/* Mostrar campo "Número de Licencia" solo si el tipo es "SERVICIOS PÚBLICOS" */}
+                      {/* Mostrar input de taxi si el tipo es "SERVICIOS PÚBLICOS" */}
                       {formData.tipo === 'SERVICIOS PúBLICOS' && (
                         <TextInput
-                          name='numero_licencia'
-                          placeholder='Número de Licencia'
+                          name='numero_taxi_remis'
+                          placeholder='Número de Taxi/Remis'
                           className='mb-3'
-                          value={formData.numero_licencia || ''}
+                          value={formData.numero_taxi_remis || ''}
                           onChange={handleInputChange}
                         />
                       )}
@@ -211,42 +330,49 @@ export default function LibreDeudaPage () {
                       <TextInput
                         name='nombre'
                         placeholder='Nombre'
-                        className='mb-3'
+                        className={`mb-3 ${formData.nombre ? 'text-blue-500' : ''}`}
                         value={formData.nombre || ''}
                         onChange={handleInputChange}
+                        disabled={shouldDisableFields}
                       />
 
                       <TextInput
                         name='apellido'
                         placeholder='Apellido'
-                        className='mb-3'
+                        className={`mb-3 ${formData.apellido ? 'text-blue-500' : ''}`}
                         value={formData.apellido || ''}
                         onChange={handleInputChange}
+                        disabled={shouldDisableFields}
                       />
 
                       <TextInput
-                        name='correo'
+                        name='email'
                         placeholder='Correo Electrónico'
                         type='email'
-                        className='mb-3'
-                        value={formData.correo || ''}
+                        className={`mb-3 ${formData.email ? 'text-blue-500' : ''}`}
+                        value={formData.email || ''}
                         onChange={handleInputChange}
+                        disabled={shouldDisableFields}
                       />
 
                       <TextInput
                         name='telefono'
                         placeholder='Teléfono'
                         type='tel'
-                        className='mb-3'
+                        className={`mb-3 ${formData.telefono ? 'text-blue-500' : ''}`}
                         value={formData.telefono || ''}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '')
+                          handleInputChange({ target: { name: 'telefono', value } })
+                        }}
+                        disabled={shouldDisableFields}
                       />
 
                       <div>
                         <div className='mb-2 block'>
                           <Label className='text-xl text-gray-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
                         </div>
-                        <FileInput name='cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} />
+                        <FileInput name='cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
                     </>
                     )}
@@ -256,16 +382,34 @@ export default function LibreDeudaPage () {
                 <ReCAPTCHA sitekey='6LeAwp8qAAAAABhAYn5FDw_uIzk8bskuHIP_sBIw' onChange={handleCaptchaChange} />
               </div>
 
-              <Button
-                className={`mt-4 w-full py-2 rounded-lg transition ${captchaVerified ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 cursor-not-allowed'
-                                    }`}
-                onClick={handleSubmit}
-                disabled={!captchaVerified}
-              >
-                Verificar Datos
-              </Button>
+              {isFormComplete() && (
+                <Button
+                  className='mt-4 w-full py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white'
+                  onClick={handleSubmit}
+                >
+                  Verificar Datos
+                </Button>
+              )}
 
-              {isLoading && <Loading />}
+              {isValidated && (
+                <div className='absolute inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 z-50 p-6'>
+                  <div className='bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-xl text-center'>
+                    {hasUnpaidOrPending()
+                      ? (
+                        <Alert color='failure' className='mb-4'>
+                          <p className='text-red-600 text-lg font-semibold'>
+                            No puedes sacar el libre deuda porque tienes multas pendientes. Por favor, acércate al juzgado de faltas municipal en la calle Maipu Norte 550.
+                          </p>
+                        </Alert>
+                        )
+                      : (
+                        <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
+                          Generar Libre Deuda
+                        </Button>
+                        )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
