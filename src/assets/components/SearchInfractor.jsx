@@ -52,6 +52,15 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
     }
   }
 
+  // Función para permitir solo números
+  const handleSearchChange = (e) => {
+    const value = e.target.value
+    // Asegurarse de que solo se ingresen números
+    if (/^\d*$/.test(value)) {
+      setSearch(value)
+    }
+  }
+
   return (
     <>
       <div className='mb-4 relative'>
@@ -60,7 +69,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
           type='text'
           placeholder='DNI'
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearchChange}
         />
 
         <div type='button' className='absolute top-3 right-3'>
