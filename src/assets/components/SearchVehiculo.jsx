@@ -44,9 +44,6 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
         marca_id: veh?.marca?.id || '',
         modelo: veh?.modelo || '',
         tipo: veh?.tipo || '',
-        color: veh?.color?.nombre || '',
-        numero_chasis: veh?.numero_chasis || '',
-        numero_motor: veh?.numero_motor || '',
         numero_taxi_remis: veh?.numero_taxi_remis || '',
         titular: veh?.titular || {}
       })

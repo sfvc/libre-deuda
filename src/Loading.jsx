@@ -7,13 +7,13 @@ const Loading = () => {
       role='status'
       aria-label='Cargando contenido, por favor espere'
     >
-      <span className='inline-block mt-1 font-medium text-sm text-gray-600 dark:text-gray-400'>
+      <span className='inline-block mt-1 font-medium text-sm text-white dark:text-gray-400'>
         Cargando...
       </span>
       <div className='mt-2 flex space-x-2'>
-        <div className='h-2 w-2 rounded-full bg-blue-500 animate-pulse' />
-        <div className='h-2 w-2 rounded-full bg-blue-500 animate-pulse delay-150' />
-        <div className='h-2 w-2 rounded-full bg-blue-500 animate-pulse delay-300' />
+        <div className='h-2 w-2 rounded-full bg-orange-500 animate-pulse' />
+        <div className='h-2 w-2 rounded-full bg-orange-500 animate-pulse delay-150' />
+        <div className='h-2 w-2 rounded-full bg-orange-500 animate-pulse delay-300' />
       </div>
     </div>
   )
