@@ -47,7 +47,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca }) {
     <>
       <div className='mb-4 relative'>
         <TextInput
-          name='marca' // Cambié a 'marca' para que coincida con el nombre del campo en formData
+          name='marca'
           type='text'
           placeholder='Ingrese la marca del vehículo'
           value={search}

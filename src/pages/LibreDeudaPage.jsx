@@ -10,12 +10,16 @@ import SearchMarca from '../assets/components/SearchMarca'
 import Loading from '@/Loading'
 
 export default function LibreDeudaPage () {
+  const [errorMessage, setErrorMessage] = useState('')
+  const [enabled, setEnabled] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const [shouldDisableFields, setShouldDisableFields] = useState(true)
   const [isValidated, setIsValidated] = useState(false)
   const [showResults, setShowResults] = useState(false)
-  const [enabled, setEnabled] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [disableMarca, setDisableMarca] = useState(true)
+  const [disableModelo, setDisableModelo] = useState(true)
+  const [disableTipo, setDisableTipo] = useState(true)
   const [dniImage, setDniImage] = useState(null)
   const [cedulaImage, setCedulaImage] = useState(null)
   const [formData, setFormData] = useState({
@@ -36,24 +40,14 @@ export default function LibreDeudaPage () {
   const validateModelo = () => formData.modelo && formData.modelo.trim().length > 0
   const validateTipo = () => formData.tipo && formData.tipo.trim().length > 0
 
-  const isFormComplete = () => {
-    return (
-      validateMarca() &&
-      validateModelo() &&
-      validateTipo() &&
-      formData.dominio &&
-      formData.nombre &&
-      formData.apellido &&
-      formData.email &&
-      formData.telefono &&
-      cedulaImage &&
-      dniImage
-    )
-  }
+  const [filters, setFilters] = useState({
+    persona_id: '',
+    vehiculo_id: ''
+  })
 
-  const { data } = useQuery({
-    queryKey: ['actas'],
-    queryFn: () => getActasFilter(),
+  const { data, isLoading } = useQuery({
+    queryKey: ['actas', filters],
+    queryFn: () => getActasFilter(filters),
     enabled
   })
 
@@ -79,6 +73,8 @@ export default function LibreDeudaPage () {
   }
 
   const handlePersonaSelect = (persona) => {
+    setFilters((prev) => ({ ...prev, persona_id: persona.persona_id }))
+
     setFormData((prev) => ({
       ...prev,
       nombre: persona?.nombre || '',
@@ -91,24 +87,22 @@ export default function LibreDeudaPage () {
   }
 
   const handleVehiculoSelect = (vehiculo) => {
-    setFormData((prev) => {
-      const updatedFormData = {
-        ...prev,
-        dominio: vehiculo?.dominio || prev.dominio,
-        marca: vehiculo?.marca?.nombre || prev.marca,
-        marca_id: vehiculo?.marca?.id || prev.marca_id,
-        modelo: vehiculo?.modelo || prev.modelo,
-        tipo: vehiculo?.tipo?.nombre || prev.tipo,
-        tipo_id: vehiculo?.tipo?.id || prev.tipo,
-        numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis
-      }
+    setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo.id }))
 
-      setShouldDisableFields(
-        updatedFormData.marca && updatedFormData.modelo && updatedFormData.tipo
-      )
+    setFormData((prev) => ({
+      ...prev,
+      dominio: vehiculo?.dominio || prev.dominio,
+      marca: vehiculo?.marca?.nombre || prev.marca,
+      marca_id: vehiculo?.marca?.id || prev.marca_id,
+      modelo: vehiculo?.modelo || prev.modelo,
+      tipo: vehiculo?.tipo?.nombre || prev.tipo,
+      tipo_id: vehiculo?.tipo?.id || prev.tipo,
+      numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis
+    }))
 
-      return updatedFormData
-    })
+    setDisableMarca(!!vehiculo?.marca?.id)
+    setDisableModelo(!!vehiculo?.modelo)
+    setDisableTipo(!!vehiculo?.tipo?.id)
   }
 
   const hasUnpaidOrPending = () => {
@@ -129,22 +123,48 @@ export default function LibreDeudaPage () {
   }
 
   const handleSubmit = () => {
+    const { nombre, apellido, email, telefono, dominio } = formData
+
     console.log('Datos enviados para verificar:', {
       formData,
       dniImage,
       cedulaImage
     })
 
+    const validationRules = {
+      Nombre: nombre,
+      Apellido: apellido,
+      'Correo Electrónico': email,
+      Teléfono: telefono,
+      'Imagen del DNI': dniImage,
+      Dominio: dominio,
+      Marca: validateMarca(),
+      Modelo: validateModelo(),
+      'Tipo de vehículo': validateTipo(),
+      'Imagen de la Cédula': cedulaImage
+    }
+
+    const missingFields = Object.entries(validationRules)
+      .filter(([field, value]) => !value)
+      .map(([field]) => `• ${field}`)
+
+    if (missingFields.length > 0) {
+      setErrorMessage(missingFields.join('\n'))
+      return
+    }
+
+    setErrorMessage('')
     setEnabled(false)
     setIsCheckingStatus(true)
     setIsVerifying(true)
+
     setTimeout(() => {
       setEnabled(true)
       setIsValidated(true)
       setShowResults(true)
       setIsCheckingStatus(false)
       setIsVerifying(false)
-    }, 2000)
+    }, 0)
   }
 
   return (
@@ -159,7 +179,7 @@ export default function LibreDeudaPage () {
             {isValidated && showResults
               ? (
                 <div className='text-center w-full'>
-                  {isCheckingStatus
+                  {isLoading
                     ? (
                       <Loading />
                       )
@@ -200,6 +220,8 @@ export default function LibreDeudaPage () {
                         tipo_id: '',
                         numero_taxi_remis: ''
                       })
+                      setDniImage(null)
+                      setCedulaImage(null)
                     }}
                   >
                     Consultar Nuevamente
@@ -265,7 +287,7 @@ export default function LibreDeudaPage () {
 
                       <div>
                         <div className='mb-2 block'>
-                          <Label className='text-xl text-gray-500' htmlFor='file-upload' value='Foto del frente del DNI titular' />
+                          <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del frente del DNI titular' />
                         </div>
                         <FileInput name='dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
@@ -278,7 +300,7 @@ export default function LibreDeudaPage () {
                         ? (
                           <SearchMarca
                             resetFiltro={!enabled}
-                            disabled={shouldDisableFields}
+                            disabled={!enabled || shouldDisableFields}
                             onSelectMarca={(marca) => {
                               setFormData((prev) => ({
                                 ...prev,
@@ -295,7 +317,7 @@ export default function LibreDeudaPage () {
                             className='mb-3'
                             value={formData.marca || ''}
                             onChange={handleInputChange}
-                            disabled={shouldDisableFields}
+                            disabled={disableMarca}
                           />
                           )}
 
@@ -307,7 +329,7 @@ export default function LibreDeudaPage () {
                         className='mb-3'
                         value={formData.modelo || ''}
                         onChange={handleInputChange}
-                        disabled={shouldDisableFields}
+                        disabled={disableModelo}
                       />
 
                       <Select
@@ -315,7 +337,7 @@ export default function LibreDeudaPage () {
                         className='mb-2'
                         value={formData.tipo || ''}
                         onChange={handleInputChange}
-                        disabled={shouldDisableFields}
+                        disabled={disableTipo}
                       >
                         <option value=''>Seleccione el Tipo de Vehículo</option>
                         {isLoadingTipos
@@ -347,22 +369,23 @@ export default function LibreDeudaPage () {
 
                       <div>
                         <div className='mb-2 block'>
-                          <Label className='text-xl text-gray-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
+                          <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
                         </div>
                         <FileInput name='cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
                     </div>
 
-                    {!isFormComplete() && (
-                      <div className='mt-4 text-red-600 font-semibold'>
-                        Completa todos los campos y subé las imagenes correspondiente para poder verificar los datos.
-                      </div>
+                    {errorMessage && (
+                      <Alert color='failure' className='mb-4'>
+                        <p className='font-semibold text-red-700'>Por favor, completa los siguientes campos faltantes:</p>
+                        <pre className='whitespace-pre-wrap text-red-600'>{errorMessage}</pre>
+                      </Alert>
                     )}
 
                     <Button
                       className='mt-4 w-full py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white'
                       onClick={handleSubmit}
-                      disabled={isVerifying || !isFormComplete()}
+                      disabled={isVerifying}
                     >
                       {isVerifying ? <Loading /> : 'Verificar Datos'}
                     </Button>

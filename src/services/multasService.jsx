@@ -5,9 +5,9 @@ export const getDataFilter = async () => {
   return response.data
 }
 
-export const getActasFilter = async () => {
+export const getActasFilter = async (filters) => {
   let params = {}
-  Object.entries().forEach(([key, value]) => {
+  Object.entries(filters).forEach(([key, value]) => {
     if (value !== '') params = { ...params, [key]: value }
   })
 
