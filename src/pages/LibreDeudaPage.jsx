@@ -11,37 +11,17 @@ import Loading from '@/Loading'
 
 export default function LibreDeudaPage () {
   const [errorMessage, setErrorMessage] = useState('')
-  const [enabled] = useState(false)
-  const [shouldDisableFields] = useState(true)
-  const [disableMarca] = useState(true)
-  const [disableModelo] = useState(true)
-  const [disableTipo] = useState(true)
-  const [files, setFiles] = useState({ dni: null, cedula: null })
-  const [status, setStatus] = useState({
-    enabled: false,
-    isCheckingStatus: false,
-    isValidated: false,
-    showResults: false,
-    isVerifying: false
-  })
-  const [, setDisabledFields] = useState({
-    shouldDisableFields: true,
-    disableMarca: true,
-    disableModelo: true,
-    disableTipo: true
-  })
-  const validateFields = () => ({
-    Nombre: formData.nombre,
-    Apellido: formData.apellido,
-    'Correo Electrónico': formData.email,
-    Teléfono: formData.telefono,
-    'Imagen del DNI': files.dni,
-    Dominio: formData.dominio,
-    Marca: formData.marca?.trim(),
-    Modelo: formData.modelo?.trim(),
-    'Tipo de vehículo': formData.tipo?.trim(),
-    'Imagen de la Cédula': files.cedula
-  })
+  const [enabled, setEnabled] = useState(false)
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
+  const [shouldDisableFields, setShouldDisableFields] = useState(true)
+  const [isValidated, setIsValidated] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [disableMarca, setDisableMarca] = useState(true)
+  const [disableModelo, setDisableModelo] = useState(true)
+  const [disableTipo, setDisableTipo] = useState(true)
+  const [dniImage, setDniImage] = useState(null)
+  const [cedulaImage, setCedulaImage] = useState(null)
   const [formData, setFormData] = useState({
     dominio: '',
     marca: '',
@@ -56,6 +36,10 @@ export default function LibreDeudaPage () {
     telefono: ''
   })
 
+  const validateMarca = () => formData.marca && formData.marca.trim().length > 0
+  const validateModelo = () => formData.modelo && formData.modelo.trim().length > 0
+  const validateTipo = () => formData.tipo && formData.tipo.trim().length > 0
+
   const [filters, setFilters] = useState({
     persona_id: '',
     vehiculo_id: ''
@@ -64,7 +48,7 @@ export default function LibreDeudaPage () {
   const { data, isLoading } = useQuery({
     queryKey: ['actas', filters],
     queryFn: () => getActasFilter(filters),
-    enabled: status.enabled
+    enabled
   })
 
   const { data: tipos, isLoading: isLoadingTipos, error: errorTipos } = useQuery({
@@ -73,79 +57,132 @@ export default function LibreDeudaPage () {
   })
 
   const handleInputChange = (e) => {
-    const { name, value, type, files: uploadedFiles } = e.target
+    const { name, value, type, files } = e.target
 
     if (type === 'file') {
-      setFiles((prev) => ({ ...prev, [name]: uploadedFiles[0] }))
+      if (name === 'foto_dni') {
+        setDniImage(files[0])
+      } else if (name === 'foto_cedula') {
+        setCedulaImage(files[0])
+      }
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
+      if (name === 'tipo') {
+        const tipoSeleccionado = tipos?.find((t) => t.nombre === value)
+
+        setFormData((prev) => ({
+          ...prev,
+          tipo: value,
+          tipo_id: tipoSeleccionado?.id || ''
+        }))
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value
+        }))
+      }
     }
   }
 
   const handlePersonaSelect = (persona) => {
     setFilters((prev) => ({ ...prev, persona_id: persona.persona_id }))
+
     setFormData((prev) => ({
       ...prev,
+      persona_id: persona?.persona_id || persona?.id || '',
       nombre: persona?.nombre || '',
       apellido: persona?.apellido || '',
       email: persona.email || '',
       telefono: persona.telefono || ''
     }))
-    setDisabledFields((prev) => ({ ...prev, shouldDisableFields: !!persona.email && !!persona.telefono }))
+
+    setShouldDisableFields(persona.email !== null && persona.telefono !== null)
   }
 
   const handleVehiculoSelect = (vehiculo) => {
-    setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo.id }))
+    setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo?.vehiculo_id || vehiculo?.id }))
 
     setFormData((prev) => ({
       ...prev,
-      dominio: vehiculo?.dominio || '',
-      marca: vehiculo?.marca?.nombre || '',
-      marca_id: vehiculo?.marca?.id || '',
-      modelo: vehiculo?.modelo || '',
-      tipo: vehiculo?.tipo?.nombre || '',
-      tipo_id: vehiculo?.tipo?.id || '',
-      numero_taxi_remis: vehiculo?.numero_taxi_remis || ''
+      vehiculo_id: vehiculo?.vehiculo_id || vehiculo?.id || '',
+      dominio: vehiculo?.dominio || prev.dominio,
+      marca: vehiculo?.marca?.nombre || prev.marca,
+      marca_id: vehiculo?.marca?.id || prev.marca_id,
+      modelo: vehiculo?.modelo || prev.modelo,
+      tipo: vehiculo?.tipo?.nombre || prev.tipo,
+      tipo_id: vehiculo?.tipo?.id || prev.tipo,
+      numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis
     }))
 
-    setDisabledFields({
-      disableMarca: !!vehiculo?.marca?.id,
-      disableModelo: !!vehiculo?.modelo,
-      disableTipo: !!vehiculo?.tipo?.id
-    })
+    setDisableMarca(!!vehiculo?.marca?.id)
+    setDisableModelo(!!vehiculo?.modelo)
+    setDisableTipo(!!vehiculo?.tipo?.id)
   }
 
   const hasUnpaidOrPending = () => {
-    if (status.isCheckingStatus) return <Loading />
+    if (isCheckingStatus) {
+      return <Loading />
+    }
 
     if (Array.isArray(data?.data)) {
-      return data.data.some((multa) =>
-        multa?.estados?.some((estado) => !['pagada', 'terminada'].includes(estado?.nombre?.toLowerCase()))
-      )
+      const filteredData = data.data.filter((multa) => {
+        return multa?.estados?.some((estado) => {
+          const nombre = estado?.nombre?.toLowerCase()
+          return nombre !== 'pagada' && nombre !== 'XXX'
+        })
+      })
+      return filteredData.length > 0
     }
     return false
   }
 
   const handleSubmit = () => {
+    const formDataWithIDs = {
+      ...formData,
+      persona_id: filters.persona_id,
+      vehiculo_id: filters.vehiculo_id
+    }
+
     console.log('Datos enviados para verificar:', {
-      formData,
-      files
+      formData: formDataWithIDs,
+      dniImage,
+      cedulaImage
     })
 
-    const missingFields = Object.entries(validateFields())
-      .filter(([_, value]) => !value)
+    const { nombre, apellido, email, telefono, dominio } = formDataWithIDs
+
+    const validationRules = {
+      Nombre: nombre,
+      Apellido: apellido,
+      'Correo Electrónico': email,
+      Teléfono: telefono,
+      'Imagen del DNI': dniImage,
+      Dominio: dominio,
+      Marca: validateMarca(),
+      Modelo: validateModelo(),
+      'Tipo de vehículo': validateTipo(),
+      'Imagen de la Cédula': cedulaImage
+    }
+
+    const missingFields = Object.entries(validationRules)
+      .filter(([field, value]) => !value)
       .map(([field]) => `• ${field}`)
 
-    if (missingFields.length) {
+    if (missingFields.length > 0) {
       setErrorMessage(missingFields.join('\n'))
       return
     }
 
     setErrorMessage('')
-    setStatus({ enabled: false, isCheckingStatus: true, isValidated: false, showResults: false, isVerifying: true })
+    setEnabled(false)
+    setIsCheckingStatus(true)
+    setIsVerifying(true)
 
     setTimeout(() => {
-      setStatus({ enabled: true, isValidated: true, showResults: true, isCheckingStatus: false, isVerifying: false })
+      setEnabled(true)
+      setIsValidated(true)
+      setShowResults(true)
+      setIsCheckingStatus(false)
+      setIsVerifying(false)
     }, 0)
   }
 
@@ -158,37 +195,60 @@ export default function LibreDeudaPage () {
         <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-xl text-center space-y-4 flex flex-col items-center'>
 
           <div className='bg-white p-6 shadow-xl rounded-lg w-full max-w-md transition-all duration-300 flex flex-col items-center'>
-            {status.isValidated && status.showResults
+            {isValidated && showResults
               ? (
                 <div className='text-center w-full'>
                   {isLoading
                     ? (
                       <Loading />
                       )
-                    : hasUnpaidOrPending()
-                      ? (
-                        <Alert color='failure' className='mb-4'>
-                          <p className='text-red-600 text-lg font-semibold'>
-                            No puedes generar tu libre deuda porque tienes multas pendientes.
-                            {data?.data?.[0]?.juzgado_id === 2
-                              ? ' Por favor, acércate al juzgado de faltas N°2. '
-                              : ' Por favor, acércate al juzgado de faltas N°1. '}
-                            Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM.
-                          </p>
-                        </Alert>
-                        )
-                      : (
-                        <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
-                          Generar Libre Deuda
-                        </Button>
-                        )}
+                    : !data?.data?.length
+                        ? (
+                          <Alert color='warning' className='mb-4'>
+                            <p className='text-yellow-700 text-lg font-semibold'>
+                              No hay relación entre el infractor y el vehículo.
+                            </p>
+                          </Alert>
+                          )
+                        : hasUnpaidOrPending()
+                          ? (
+                            <Alert color='failure' className='mb-4'>
+                              <p className='text-red-600 text-lg font-semibold'>
+                                No puedes generar tu libre deuda porque tienes multas pendientes.
+                                {data?.data?.[0]?.juzgado_id === 2
+                                  ? ' Por favor, acércate al juzgado de faltas N°2. '
+                                  : ' Por favor, acércate al juzgado de faltas N°1. '}
+                                Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM.
+                              </p>
+                            </Alert>
+                            )
+                          : (
+                            <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
+                              Generar Libre Deuda
+                            </Button>
+                            )}
                   <Button
                     className='mt-4 w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white'
                     onClick={() => {
-                      setStatus({ isValidated: false, showResults: false, enabled: false })
-                      setDisabledFields({ shouldDisableFields: true, disableMarca: true, disableModelo: true, disableTipo: true })
-                      setFormData({ nombre: '', apellido: '', email: '', telefono: '', dominio: '', marca: '', marca_id: '', modelo: '', tipo: '', tipo_id: '', numero_taxi_remis: '' })
-                      setFiles({ dni: null, cedula: null })
+                      setShowResults(false)
+                      setIsValidated(false)
+                      setShouldDisableFields(true)
+                      setEnabled(false)
+                      setFormData({
+                        nombre: '',
+                        apellido: '',
+                        email: '',
+                        telefono: '',
+                        dominio: '',
+                        marca: '',
+                        marca_id: '',
+                        modelo: '',
+                        tipo: '',
+                        tipo_id: '',
+                        numero_taxi_remis: ''
+                      })
+                      setDniImage(null)
+                      setCedulaImage(null)
                     }}
                   >
                     Consultar Nuevamente
@@ -197,7 +257,7 @@ export default function LibreDeudaPage () {
                 )
               : (
                 <>
-                  <h2 className='rainbow__text mb-2 font-semibold text-2xl'>
+                  <h2 className='text-gray-700 dark:text-slate-400 mb-2 font-semibold text-2xl'>
                     Libre Deuda Online
                   </h2>
 
@@ -209,7 +269,7 @@ export default function LibreDeudaPage () {
                     <div>
                       <h4 className='mb-2 font-medium text-gray-600'>Titular</h4>
 
-                      <SearchInfractor resetFiltro={!status.enabled} onSelectPersona={handlePersonaSelect} />
+                      <SearchInfractor resetFiltro={!enabled} onSelectPersona={handlePersonaSelect} />
 
                       <TextInput
                         name='nombre'
@@ -256,18 +316,18 @@ export default function LibreDeudaPage () {
                         <div className='mb-2 block'>
                           <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del frente del DNI titular' />
                         </div>
-                        <FileInput name='dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                        <FileInput name='foto_dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
 
                       <h4 className='mb-2 font-medium text-gray-600'>Vehículo</h4>
 
-                      <SearchVehiculo resetFiltro={!status.enabled} onSelectVehiculo={handleVehiculoSelect} />
+                      <SearchVehiculo resetFiltro={!enabled} onSelectVehiculo={handleVehiculoSelect} />
 
                       {formData.marca === 'INDETERMINADO' || !formData.marca
                         ? (
                           <SearchMarca
                             resetFiltro={!enabled}
-                            disabled={disableMarca}
+                            // disabled={shouldDisableFields}
                             onSelectMarca={(marca) => {
                               setFormData((prev) => ({
                                 ...prev,
@@ -304,7 +364,6 @@ export default function LibreDeudaPage () {
                         className='mb-2'
                         value={formData.tipo || ''}
                         onChange={handleInputChange}
-                        placeholder='Ingrese el tipo de vehículo'
                         disabled={disableTipo}
                       >
                         <option value=''>Seleccione el Tipo de Vehículo</option>
@@ -339,7 +398,7 @@ export default function LibreDeudaPage () {
                         <div className='mb-2 block'>
                           <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
                         </div>
-                        <FileInput name='cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                        <FileInput name='foto_cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
                     </div>
 
@@ -350,8 +409,12 @@ export default function LibreDeudaPage () {
                       </Alert>
                     )}
 
-                    <Button className='mt-4 w-full bg-green-500 hover:bg-green-600 text-white' onClick={handleSubmit} disabled={status.isVerifying}>
-                      {status.isVerifying ? <Loading /> : 'Verificar Datos'}
+                    <Button
+                      className='mt-4 w-full py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white'
+                      onClick={handleSubmit}
+                      disabled={isVerifying}
+                    >
+                      {isVerifying ? <Loading /> : 'Verificar Datos'}
                     </Button>
 
                   </div>
