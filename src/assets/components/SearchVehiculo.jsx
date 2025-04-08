@@ -80,7 +80,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
         </div>
 
         {search.length >= 2 && show && (
-          <ul className='w-full overflow-y-auto h-max-32 absolute z-10 bg-white'>
+          <ul className='w-full max-h-56 overflow-y-auto absolute z-10 bg-white shadow-md'>
             {isFetching
               ? (
                 <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>

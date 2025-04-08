@@ -11,7 +11,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   const { data: personas = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarPersonas', search],
     queryFn: async () => {
-      if (search.length <= 3) return []
+      if (search.length <= 2) return []
       const response = await juzgadoApi.get(`/personas/buscar/${search}`)
       return response.data.data
     },
@@ -19,7 +19,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   })
 
   useEffect(() => {
-    if (search.length > 3) {
+    if (search.length > 2) {
       const timeoutId = setTimeout(() => refetch(), 1000)
       return () => clearTimeout(timeoutId)
     } else {
@@ -37,7 +37,6 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
     setSearch(`${identificacion} - ${nombre}`)
     setShow(false)
 
-    // Aquí pasamos toda la información relevante
     if (onSelectPersona) {
       onSelectPersona({
         persona_id: per.id,
@@ -55,7 +54,6 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   // Función para permitir solo números
   const handleSearchChange = (e) => {
     const value = e.target.value
-    // Asegurarse de que solo se ingresen números
     if (/^\d*$/.test(value)) {
       setSearch(value)
     }
@@ -91,8 +89,8 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
           </svg>
         </div>
 
-        {search.length >= 3 && show && (
-          <ul className='w-full overflow-y-auto h-max-32 absolute z-10 bg-white'>
+        {search.length >= 2 && show && (
+          <ul className='w-full max-h-52 overflow-y-auto absolute z-10 bg-white shadow-md'>
             {isFetching
               ? (
                 <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>

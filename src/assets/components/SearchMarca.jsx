@@ -10,7 +10,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
   const { data: marcas = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarMarca', search],
     queryFn: async () => {
-      if (search.length <= 3) return []
+      if (search.length <= 2) return []
       const response = await juzgadoApi.get(`marcas-select?query=${search}`)
       const { data } = response.data
       return data
@@ -19,7 +19,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
   })
 
   useEffect(() => {
-    if (search.length > 3) {
+    if (search.length > 2) {
       const timeoutId = setTimeout(() => refetch(), 1000)
       return () => clearTimeout(timeoutId)
     } else {
@@ -71,7 +71,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
           <path d='M21 21l-6 -6' />
         </svg>
       </div>
-      {search.length >= 3 && show && (
+      {search.length >= 2 && show && (
         <ul className='w-full overflow-y-auto max-h-96 absolute z-10 bg-white'>
           {isFetching
             ? (

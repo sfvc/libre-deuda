@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Alert, Button, FileInput, Label, Select, TextInput } from 'flowbite-react'
+import { Alert, Button, FileInput, Label, Select, TextInput, Modal } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
-import { getActasFilter, getTipos } from '@/services/multasService'
+import { getActasFilter, getTipos, postPersonaDatos } from '@/services/multasService'
 import DefaultNavbar from '../assets/layout/DefaultNavbar'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
 import SearchInfractor from '@/assets/components/SearchInfractor'
@@ -10,10 +10,12 @@ import SearchMarca from '../assets/components/SearchMarca'
 import Loading from '@/Loading'
 
 export default function LibreDeudaPage () {
+  const [modoConsulta, setModoConsulta] = useState('simple')
   const [errorMessage, setErrorMessage] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const [shouldDisableFields, setShouldDisableFields] = useState(true)
+  const [showDeclarationModal, setShowDeclarationModal] = useState(false)
   const [isValidated, setIsValidated] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -22,7 +24,10 @@ export default function LibreDeudaPage () {
   const [disableTipo, setDisableTipo] = useState(true)
   const [dniImage, setDniImage] = useState(null)
   const [cedulaImage, setCedulaImage] = useState(null)
+  const [marbeteImage, setMarbeteImage] = useState(null)
   const [formData, setFormData] = useState({
+    persona_id: '',
+    vehiculo_id: '',
     dominio: '',
     marca: '',
     marca_id: '',
@@ -46,8 +51,13 @@ export default function LibreDeudaPage () {
   })
 
   const { data, isLoading } = useQuery({
-    queryKey: ['actas', filters],
-    queryFn: () => getActasFilter(filters),
+    queryKey: ['actas', filters, modoConsulta],
+    queryFn: () => {
+      if (modoConsulta === 'simple') {
+        return getActasFilter({ persona_id: filters.persona_id })
+      }
+      return getActasFilter(filters)
+    },
     enabled
   })
 
@@ -64,6 +74,8 @@ export default function LibreDeudaPage () {
         setDniImage(files[0])
       } else if (name === 'foto_cedula') {
         setCedulaImage(files[0])
+      } else if (name === 'foto_marbete') {
+        setMarbeteImage(files[0])
       }
     } else {
       if (name === 'tipo') {
@@ -114,7 +126,7 @@ export default function LibreDeudaPage () {
     }))
 
     setDisableMarca(!!vehiculo?.marca?.id)
-    setDisableModelo(!!vehiculo?.modelo)
+    setDisableModelo(vehiculo?.modelo !== '0' && !!vehiculo?.modelo)
     setDisableTipo(!!vehiculo?.tipo?.id)
   }
 
@@ -135,18 +147,12 @@ export default function LibreDeudaPage () {
     return false
   }
 
-  const handleSubmit = () => {
+  const handleCheckAndShowModal = () => {
     const formDataWithIDs = {
       ...formData,
       persona_id: filters.persona_id,
       vehiculo_id: filters.vehiculo_id
     }
-
-    console.log('Datos enviados para verificar:', {
-      formData: formDataWithIDs,
-      dniImage,
-      cedulaImage
-    })
 
     const { nombre, apellido, email, telefono, dominio } = formDataWithIDs
 
@@ -155,12 +161,18 @@ export default function LibreDeudaPage () {
       Apellido: apellido,
       'Correo Electrónico': email,
       Teléfono: telefono,
-      'Imagen del DNI': dniImage,
-      Dominio: dominio,
-      Marca: validateMarca(),
-      Modelo: validateModelo(),
-      'Tipo de vehículo': validateTipo(),
-      'Imagen de la Cédula': cedulaImage
+      'Imagen del DNI': dniImage
+    }
+
+    if (modoConsulta === 'completo') {
+      Object.assign(validationRules, {
+        Dominio: dominio,
+        Marca: validateMarca(),
+        Modelo: validateModelo(),
+        'Tipo de vehículo': validateTipo(),
+        'Imagen de la Cédula': cedulaImage,
+        'Imagen del Marbete': marbeteImage
+      })
     }
 
     const missingFields = Object.entries(validationRules)
@@ -173,17 +185,45 @@ export default function LibreDeudaPage () {
     }
 
     setErrorMessage('')
-    setEnabled(false)
-    setIsCheckingStatus(true)
-    setIsVerifying(true)
+    setShowDeclarationModal(true)
+  }
 
-    setTimeout(() => {
-      setEnabled(true)
-      setIsValidated(true)
-      setShowResults(true)
-      setIsCheckingStatus(false)
-      setIsVerifying(false)
-    }, 0)
+  const handleSubmit = async () => {
+    const dataToSend = new FormData()
+
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        if (value instanceof File || value instanceof Blob) {
+          dataToSend.append(key, value)
+        } else {
+          dataToSend.append(key, value)
+        }
+      }
+    })
+
+    if (dniImage instanceof File) dataToSend.append('foto_dni', dniImage)
+    if (cedulaImage instanceof File) dataToSend.append('foto_cedula', cedulaImage)
+    if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
+
+    try {
+      const response = await postPersonaDatos(dataToSend)
+      console.log('Datos enviados correctamente:', response)
+
+      setErrorMessage('')
+      setEnabled(false)
+      setIsCheckingStatus(true)
+      setIsVerifying(true)
+
+      setTimeout(() => {
+        setEnabled(true)
+        setIsValidated(true)
+        setShowResults(true)
+        setIsCheckingStatus(false)
+        setIsVerifying(false)
+      }, 0)
+    } catch (error) {
+      setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
+    }
   }
 
   return (
@@ -195,6 +235,22 @@ export default function LibreDeudaPage () {
         <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-xl text-center space-y-4 flex flex-col items-center'>
 
           <div className='bg-white p-6 shadow-xl rounded-lg w-full max-w-md transition-all duration-300 flex flex-col items-center'>
+
+            <div className='w-full'>
+              <Label htmlFor='modoConsulta' className='block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300'>
+                Modo de Consulta
+              </Label>
+              <Select
+                id='modoConsulta'
+                value={modoConsulta}
+                onChange={(e) => setModoConsulta(e.target.value)}
+                className='mb-4 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-500 transition-all duration-200'
+              >
+                <option value='simple'>Consulta por Persona</option>
+                <option value='completo'>Consulta por Persona y Vehículo</option>
+              </Select>
+            </div>
+
             {isValidated && showResults
               ? (
                 <div className='text-center w-full'>
@@ -206,7 +262,7 @@ export default function LibreDeudaPage () {
                         ? (
                           <Alert color='warning' className='mb-4'>
                             <p className='text-yellow-700 text-lg font-semibold'>
-                              No hay relación entre el infractor y el vehículo.
+                              No se registran multas relacionadas entre el infractor y el vehículo. Ante cualquier duda, por favor dirigite al Juzgado de Faltas Municipal, ubicado en calle Maipú Norte 550, en el horario de 07:00 a 16:00.
                             </p>
                           </Alert>
                           )
@@ -249,6 +305,7 @@ export default function LibreDeudaPage () {
                       })
                       setDniImage(null)
                       setCedulaImage(null)
+                      setMarbeteImage(null)
                     }}
                   >
                     Consultar Nuevamente
@@ -319,87 +376,99 @@ export default function LibreDeudaPage () {
                         <FileInput name='foto_dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
                       </div>
 
-                      <h4 className='mb-2 font-medium text-gray-600'>Vehículo</h4>
+                      {modoConsulta === 'completo' && (
+                        <>
+                          <h4 className='mb-2 font-medium text-gray-600'>Vehículo</h4>
 
-                      <SearchVehiculo resetFiltro={!enabled} onSelectVehiculo={handleVehiculoSelect} />
+                          <SearchVehiculo resetFiltro={!enabled} onSelectVehiculo={handleVehiculoSelect} />
 
-                      {formData.marca === 'INDETERMINADO' || !formData.marca
-                        ? (
-                          <SearchMarca
-                            resetFiltro={!enabled}
-                            // disabled={shouldDisableFields}
-                            onSelectMarca={(marca) => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                marca: marca?.nombre || '',
-                                marca_id: marca?.id || ''
-                              }))
-                            }}
-                          />
-                          )
-                        : (
-                          <TextInput
-                            name='marca'
-                            placeholder='Marca del Vehículo'
-                            className='mb-3'
-                            value={formData.marca || ''}
-                            onChange={handleInputChange}
-                            disabled={disableMarca}
-                          />
-                          )}
-
-                      <input type='hidden' name='marca_id' value={formData.marca_id || ''} disabled={shouldDisableFields} />
-
-                      <TextInput
-                        name='modelo'
-                        placeholder='Modelo del Vehículo'
-                        className='mb-3'
-                        value={formData.modelo || ''}
-                        onChange={handleInputChange}
-                        disabled={disableModelo}
-                      />
-
-                      <Select
-                        name='tipo'
-                        className='mb-2'
-                        value={formData.tipo || ''}
-                        onChange={handleInputChange}
-                        disabled={disableTipo}
-                      >
-                        <option value=''>Seleccione el Tipo de Vehículo</option>
-                        {isLoadingTipos
-                          ? (
-                            <option>Cargando...</option>
-                            )
-                          : errorTipos
+                          {formData.marca === 'INDETERMINADO' || !formData.marca
                             ? (
-                              <option>Error al cargar</option>
+                              <SearchMarca
+                                resetFiltro={!enabled}
+                                onSelectMarca={(marca) => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    marca: marca?.nombre || '',
+                                    marca_id: marca?.id || ''
+                                  }))
+                                }}
+                              />
                               )
                             : (
-                                tipos.map((tipo) => (
-                                  <option key={tipo.id} value={tipo.nombre}>
-                                    {tipo.nombre}
-                                  </option>
-                                ))
+                              <TextInput
+                                name='marca'
+                                placeholder='Marca del Vehículo'
+                                className='mb-3'
+                                value={formData.marca || ''}
+                                onChange={handleInputChange}
+                                disabled={disableMarca}
+                              />
                               )}
-                      </Select>
 
-                      {formData.tipo === 'SERVICIOS PúBLICOS' && (
-                        <TextInput
-                          name='numero_taxi_remis'
-                          placeholder='Número de Taxi/Remis/Colectivo'
-                          className='mb-3'
-                          value={formData.numero_taxi_remis || ''}
-                          onChange={handleInputChange}
-                        />
+                          <input type='hidden' name='marca_id' value={formData.marca_id || ''} disabled={shouldDisableFields} />
+
+                          <TextInput
+                            name='modelo'
+                            placeholder='Modelo del Vehículo'
+                            className='mb-3'
+                            value={formData.modelo || ''}
+                            onChange={handleInputChange}
+                            disabled={formData.modelo !== '0' && disableModelo}
+                          />
+
+                          <Select
+                            name='tipo'
+                            className='mb-2'
+                            value={formData.tipo || ''}
+                            onChange={handleInputChange}
+                            disabled={disableTipo}
+                          >
+                            <option value=''>Seleccione el Tipo de Vehículo</option>
+                            {isLoadingTipos
+                              ? (
+                                <option>Cargando...</option>
+                                )
+                              : errorTipos
+                                ? (
+                                  <option>Error al cargar</option>
+                                  )
+                                : (
+                                    tipos.map((tipo) => (
+                                      <option key={tipo.id} value={tipo.nombre}>
+                                        {tipo.nombre}
+                                      </option>
+                                    ))
+                                  )}
+                          </Select>
+
+                          {formData.tipo === 'SERVICIOS PúBLICOS' && (
+                            <div>
+                              <div>
+                                <div className='mb-2 block'>
+                                  <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del Marbete' />
+                                </div>
+                                <FileInput name='foto_marbete' placeholder='Marbete del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                              </div>
+
+                              <TextInput
+                                name='numero_taxi_remis'
+                                placeholder='Número de Taxi/Remis/Colectivo'
+                                className='mb-3'
+                                value={formData.numero_taxi_remis || ''}
+                                onChange={handleInputChange}
+                              />
+                            </div>
+                          )}
+
+                          <div>
+                            <div className='mb-2 block'>
+                              <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
+                            </div>
+                            <FileInput name='foto_cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                          </div>
+                        </>
                       )}
-
-                      <div>
-                        <div className='mb-2 block'>
-                          <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
-                        </div>
-                        <FileInput name='foto_cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
-                      </div>
                     </div>
 
                     {errorMessage && (
@@ -411,7 +480,7 @@ export default function LibreDeudaPage () {
 
                     <Button
                       className='mt-4 w-full py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white'
-                      onClick={handleSubmit}
+                      onClick={handleCheckAndShowModal}
                       disabled={isVerifying}
                     >
                       {isVerifying ? <Loading /> : 'Verificar Datos'}
@@ -420,6 +489,45 @@ export default function LibreDeudaPage () {
                   </div>
                 </>
                 )}
+
+            <Modal
+              show={showDeclarationModal}
+              onClose={() => setShowDeclarationModal(false)}
+              size='md'
+              popup
+            >
+              <Modal.Header className='border-b border-gray-200 dark:border-gray-700' />
+              <Modal.Body>
+                <div className='text-center px-4 py-2'>
+                  <h3 className='mb-3 text-xl font-semibold text-gray-900 dark:text-white'>
+                    Declaración Jurada
+                  </h3>
+                  <p className='mb-6 text-sm text-gray-700 dark:text-gray-300'>
+                    Los datos que estás por enviar tienen carácter de declaración jurada.
+                    Asegurate de que sean correctos antes de continuar.
+                  </p>
+                  <div className='flex justify-center gap-4'>
+                    <Button
+                      color='gray'
+                      className='w-28 rounded-lg'
+                      onClick={() => setShowDeclarationModal(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      color='success'
+                      className='w-28 rounded-lg bg-green-600 hover:bg-green-700 text-white'
+                      onClick={() => {
+                        setShowDeclarationModal(false)
+                        handleSubmit()
+                      }}
+                    >
+                      Aceptar
+                    </Button>
+                  </div>
+                </div>
+              </Modal.Body>
+            </Modal>
           </div>
         </div>
       </main>
