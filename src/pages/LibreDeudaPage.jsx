@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Alert, Button, FileInput, Label, Select, TextInput, Modal } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
 import { getActasFilter, getTipos, postPersonaDatos } from '@/services/multasService'
@@ -26,19 +26,19 @@ export default function LibreDeudaPage () {
   const [cedulaImage, setCedulaImage] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
   const [formData, setFormData] = useState({
-    persona_id: '',
-    vehiculo_id: '',
-    dominio: '',
-    marca: '',
-    marca_id: '',
-    modelo: '',
-    tipo: '',
-    tipo_id: '',
-    numero_taxi_remis: '',
-    nombre: '',
-    apellido: '',
-    email: '',
-    telefono: ''
+    persona_id: null,
+    nombre: null,
+    apellido: null,
+    email: null,
+    telefono: null,
+    vehiculo_id: null,
+    dominio: null,
+    marca: null,
+    marca_id: null,
+    modelo: null,
+    tipo: null,
+    tipo_id: null,
+    numero_taxi_remis: null
   })
 
   const validateMarca = () => formData.marca && formData.marca.trim().length > 0
@@ -107,7 +107,7 @@ export default function LibreDeudaPage () {
       telefono: persona.telefono || ''
     }))
 
-    setShouldDisableFields(persona.email !== null && persona.telefono !== null)
+    setShouldDisableFields()
   }
 
   const handleVehiculoSelect = (vehiculo) => {
@@ -115,19 +115,19 @@ export default function LibreDeudaPage () {
 
     setFormData((prev) => ({
       ...prev,
-      vehiculo_id: vehiculo?.vehiculo_id || vehiculo?.id || '',
-      dominio: vehiculo?.dominio || prev.dominio,
-      marca: vehiculo?.marca?.nombre || prev.marca,
-      marca_id: vehiculo?.marca?.id || prev.marca_id,
-      modelo: vehiculo?.modelo || prev.modelo,
-      tipo: vehiculo?.tipo?.nombre || prev.tipo,
-      tipo_id: vehiculo?.tipo?.id || prev.tipo,
-      numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis
+      vehiculo_id: vehiculo?.vehiculo_id || vehiculo?.id || null,
+      dominio: vehiculo?.dominio || prev.dominio || null,
+      marca: vehiculo?.marca?.nombre || prev.marca || null,
+      marca_id: vehiculo?.marca?.id || prev.marca_id || null,
+      modelo: vehiculo?.modelo || prev.modelo || null,
+      tipo: vehiculo?.tipo?.nombre || prev.tipo || null,
+      tipo_id: vehiculo?.tipo?.id || prev.tipo || null,
+      numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis || null
     }))
 
-    setDisableMarca(!!vehiculo?.marca?.id)
-    setDisableModelo(vehiculo?.modelo !== '0' && !!vehiculo?.modelo)
-    setDisableTipo(!!vehiculo?.tipo?.id)
+    setDisableMarca()
+    setDisableModelo()
+    setDisableTipo()
   }
 
   const hasUnpaidOrPending = () => {
@@ -137,9 +137,9 @@ export default function LibreDeudaPage () {
 
     if (Array.isArray(data?.data)) {
       const filteredData = data.data.filter((multa) => {
-        return multa?.estados?.some((estado) => {
+        return multa?.estadosActa?.some((estado) => {
           const nombre = estado?.nombre?.toLowerCase()
-          return nombre !== 'pagada' && nombre !== 'XXX'
+          return nombre !== 'pagada' && nombre !== 'sin valor monetario'
         })
       })
       return filteredData.length > 0
@@ -170,8 +170,7 @@ export default function LibreDeudaPage () {
         Marca: validateMarca(),
         Modelo: validateModelo(),
         'Tipo de vehículo': validateTipo(),
-        'Imagen de la Cédula': cedulaImage,
-        'Imagen del Marbete': marbeteImage
+        'Imagen de la Cédula': cedulaImage
       })
     }
 
@@ -206,8 +205,8 @@ export default function LibreDeudaPage () {
     if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
 
     try {
+      // eslint-disable-next-line no-unused-vars
       const response = await postPersonaDatos(dataToSend)
-      console.log('Datos enviados correctamente:', response)
 
       setErrorMessage('')
       setEnabled(false)
@@ -226,6 +225,31 @@ export default function LibreDeudaPage () {
     }
   }
 
+  useEffect(() => {
+    if (modoConsulta === 'simple') {
+      setFormData((prev) => ({
+        ...prev,
+        vehiculo_id: '',
+        dominio: '',
+        marca: '',
+        marca_id: '',
+        modelo: '',
+        tipo: '',
+        tipo_id: '',
+        numero_taxi_remis: ''
+      }))
+      setCedulaImage(null)
+      setMarbeteImage(null)
+      setDisableMarca(true)
+      setDisableModelo(true)
+      setDisableTipo(true)
+      setFilters((prev) => ({
+        ...prev,
+        vehiculo_id: ''
+      }))
+    }
+  }, [modoConsulta])
+
   return (
     <div className='min-h-screen flex flex-col bg-gradient-to-r from-blue-50 via-blue-100 to-blue-200 dark:bg-slate-900'>
 
@@ -236,20 +260,22 @@ export default function LibreDeudaPage () {
 
           <div className='bg-white p-6 shadow-xl rounded-lg w-full max-w-md transition-all duration-300 flex flex-col items-center'>
 
-            <div className='w-full'>
-              <Label htmlFor='modoConsulta' className='block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300'>
-                Modo de Consulta
-              </Label>
-              <Select
-                id='modoConsulta'
-                value={modoConsulta}
-                onChange={(e) => setModoConsulta(e.target.value)}
-                className='mb-4 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-500 transition-all duration-200'
-              >
-                <option value='simple'>Consulta por Persona</option>
-                <option value='completo'>Consulta por Persona y Vehículo</option>
-              </Select>
-            </div>
+            {!showResults && (
+              <div className='w-full'>
+                <Label htmlFor='modoConsulta' className='block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300'>
+                  Modo de Consulta
+                </Label>
+                <Select
+                  id='modoConsulta'
+                  value={modoConsulta}
+                  onChange={(e) => setModoConsulta(e.target.value)}
+                  className='mb-4 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-500 transition-all duration-200'
+                >
+                  <option value='simple'>Consulta por Persona</option>
+                  <option value='completo'>Consulta por Persona y Vehículo</option>
+                </Select>
+              </div>
+            )}
 
             {isValidated && showResults
               ? (
@@ -373,7 +399,7 @@ export default function LibreDeudaPage () {
                         <div className='mb-2 block'>
                           <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del frente del DNI titular' />
                         </div>
-                        <FileInput name='foto_dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                        <FileInput name='foto_dni' placeholder='DNI del Titular' type='file' className='mb-3' onChange={handleInputChange} accept='image/*' capture='environment' />
                       </div>
 
                       {modoConsulta === 'completo' && (
@@ -448,7 +474,7 @@ export default function LibreDeudaPage () {
                                 <div className='mb-2 block'>
                                   <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del Marbete' />
                                 </div>
-                                <FileInput name='foto_marbete' placeholder='Marbete del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                                <FileInput name='foto_marbete' placeholder='Marbete del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/*' capture='environment' />
                               </div>
 
                               <TextInput
@@ -465,7 +491,7 @@ export default function LibreDeudaPage () {
                             <div className='mb-2 block'>
                               <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
                             </div>
-                            <FileInput name='foto_cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/png, image/jpeg, image/jpg' />
+                            <FileInput name='foto_cedula' placeholder='Cedula del Vehículo' type='file' className='mb-3' onChange={handleInputChange} accept='image/*' capture='environment' />
                           </div>
                         </>
                       )}

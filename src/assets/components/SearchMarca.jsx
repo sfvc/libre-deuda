@@ -11,7 +11,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
     queryKey: ['buscarMarca', search],
     queryFn: async () => {
       if (search.length <= 2) return []
-      const response = await juzgadoApi.get(`marcas-select?query=${search}`)
+      const response = await juzgadoApi.get(`libre-deuda/marcas-select?query=${search}`)
       const { data } = response.data
       return data
     },

@@ -12,7 +12,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
     queryKey: ['buscarPersonas', search],
     queryFn: async () => {
       if (search.length <= 2) return []
-      const response = await juzgadoApi.get(`/personas/buscar/${search}`)
+      const response = await juzgadoApi.get(`libre-deuda/personas/buscar/${search}`)
       return response.data.data
     },
     enabled: false

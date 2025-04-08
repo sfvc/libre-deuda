@@ -12,7 +12,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
     queryKey: ['buscarVehiculo', search],
     queryFn: async () => {
       if (search.length <= 2) return []
-      const response = await juzgadoApi.get(`/vehiculos/buscar/${search}`)
+      const response = await juzgadoApi.get(`libre-deuda/vehiculos/buscar/${search}`)
       return response.data.data
     },
     enabled: false
