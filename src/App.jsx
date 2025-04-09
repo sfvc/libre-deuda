@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Error from './pages/404'
 import Layout from './assets/layout/Layout'
 import LibreDeudaPage from './pages/LibreDeudaPage'
+import { Pdf } from './pages/Pdf'
 
 function App () {
   return (
@@ -11,6 +12,8 @@ function App () {
       {/* Rutas envueltas por el Layout */}
       <Route element={<Layout />}>
         <Route path='/' element={<LibreDeudaPage />} />
+
+        <Route path='/pdf' element={<Pdf />} />
       </Route>
 
       {/* Rutas fuera del Layout */}
