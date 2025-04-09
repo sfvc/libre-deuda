@@ -8,6 +8,7 @@ import SearchInfractor from '@/assets/components/SearchInfractor'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '../assets/components/SearchMarca'
 import Loading from '@/Loading'
+import { postLibreDeuda } from '../services/multasService'
 
 export default function LibreDeudaPage () {
   const [modoConsulta, setModoConsulta] = useState('simple')
@@ -25,6 +26,7 @@ export default function LibreDeudaPage () {
   const [dniImage, setDniImage] = useState(null)
   const [cedulaImage, setCedulaImage] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
+  const [libreDeudaPDF] = useState(null)
   const [formData, setFormData] = useState({
     persona_id: null,
     nombre: null,
@@ -107,7 +109,7 @@ export default function LibreDeudaPage () {
       telefono: persona.telefono || ''
     }))
 
-    setShouldDisableFields()
+    setShouldDisableFields(false)
   }
 
   const handleVehiculoSelect = (vehiculo) => {
@@ -125,9 +127,9 @@ export default function LibreDeudaPage () {
       numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis || null
     }))
 
-    setDisableMarca()
-    setDisableModelo()
-    setDisableTipo()
+    setDisableMarca(false)
+    setDisableModelo(false)
+    setDisableTipo(false)
   }
 
   const handleMultasPagadas = () => {
@@ -188,6 +190,21 @@ export default function LibreDeudaPage () {
     setShowDeclarationModal(true)
   }
 
+  const handleGenerateLibreDeuda = async () => {
+    const libreDeudaFormData = new FormData()
+    libreDeudaFormData.append('persona_id', formData.persona_id)
+    libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
+    if (libreDeudaPDF instanceof File) libreDeudaFormData.append('libre_deuda', libreDeudaPDF)
+
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const response = await postLibreDeuda(libreDeudaFormData)
+    } catch (error) {
+      console.error('Error generando el libre deuda', error)
+      alert('Ocurrió un error al generar el libre deuda.')
+    }
+  }
+
   const handleSubmit = async () => {
     setIsVerifying(true)
 
@@ -220,7 +237,13 @@ export default function LibreDeudaPage () {
       }, 0)
     } catch (error) {
       setIsVerifying(false)
-      setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
+
+      if (error.response && error.response.data) {
+        const { message } = error.response.data
+        setErrorMessage(message)
+      } else {
+        setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
+      }
     }
   }
 
@@ -297,7 +320,10 @@ export default function LibreDeudaPage () {
                         : handleMultasPagadas()
                           ? (
                             <>
-                              <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
+                              <Button
+                                className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'
+                                onClick={handleGenerateLibreDeuda}
+                              >
                                 Generar Libre Deuda
                               </Button>
                             </>
