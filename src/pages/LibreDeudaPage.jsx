@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Alert, Button, FileInput, Label, Select, TextInput, Modal } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
-import { getActasFilter, getTipos, postPersonaDatos } from '@/services/multasService'
+import { getActasFilter, getTipos, postPersonaDatos, postLibreDeuda } from '@/services/multasService'
 import DefaultNavbar from '../assets/layout/DefaultNavbar'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
 import SearchInfractor from '@/assets/components/SearchInfractor'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '../assets/components/SearchMarca'
 import Loading from '@/Loading'
-import { postLibreDeuda } from '../services/multasService'
+import { formatearData } from '../assets/util/formatData'
+import { generarLibreDeudaPDF } from '../assets/components/generarLibreDeudaPDF'
 
 export default function LibreDeudaPage () {
   const [modoConsulta, setModoConsulta] = useState('simple')
@@ -26,7 +27,6 @@ export default function LibreDeudaPage () {
   const [dniImage, setDniImage] = useState(null)
   const [cedulaImage, setCedulaImage] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
-  const [libreDeudaPDF] = useState(null)
   const [formData, setFormData] = useState({
     persona_id: null,
     nombre: null,
@@ -191,14 +191,34 @@ export default function LibreDeudaPage () {
   }
 
   const handleGenerateLibreDeuda = async () => {
-    const libreDeudaFormData = new FormData()
-    libreDeudaFormData.append('persona_id', formData.persona_id)
-    libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
-    if (libreDeudaPDF instanceof File) libreDeudaFormData.append('libre_deuda', libreDeudaPDF)
-
     try {
-      // eslint-disable-next-line no-unused-vars
-      const response = await postLibreDeuda(libreDeudaFormData)
+      const acta = {
+        infractores: [{
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          documento: formData.dni || formData.infractorDocumento
+        }],
+        vehiculo: formData.vehiculo_id
+          ? {
+              dominio: formData.dominio,
+              marca: formData.marca,
+              modelo: formData.modelo,
+              tipo: formData.tipo,
+              numero_taxi_remis: formData.numero_taxi_remis
+            }
+          : null
+      }
+
+      const formattedData = await formatearData(acta)
+      formattedData.persona_id = formData.persona_id
+      formattedData.libreDeudaID = Date.now()
+
+      await generarLibreDeudaPDF(formattedData)
+
+      const libreDeudaFormData = new FormData()
+      libreDeudaFormData.append('persona_id', formData.persona_id)
+      libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id || '')
+      await postLibreDeuda(libreDeudaFormData)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')

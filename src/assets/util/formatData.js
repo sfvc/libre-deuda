@@ -12,27 +12,18 @@ export const formatearData = async (acta) => {
 
   let personas = ''
   let documentos = ''
-  let titular = ''
 
   for (const [i, infractor] of acta?.infractores?.entries() || []) {
     if (i === 0) {
       personas = deleteDuplicateName(infractor?.apellido || '', infractor?.nombre || '')
-      documentos = infractor?.documento || ''
+      documentos = String(infractor?.documento || '')
     } else {
       personas += `, ${deleteDuplicateName(infractor?.apellido || '', infractor?.nombre || '')}`
-      documentos += `, ${infractor?.documento || ''}`
+      documentos += `, ${String(infractor?.documento || '')}`
     }
   }
 
   const vehiculoFormatted = combinarMarcaYModelo(acta?.vehiculo)
-
-  if (acta?.vehiculo?.titular) {
-    const apellido = acta?.vehiculo?.titular?.apellido || ''
-    const nombre = acta?.vehiculo?.titular?.nombre || ''
-    const numeroDocumento = acta?.vehiculo?.titular?.numero_documento || ''
-
-    titular = `${deleteDuplicateName(apellido, nombre)} - ${numeroDocumento}`
-  }
 
   const data = {
     // Fecha actual
@@ -43,16 +34,9 @@ export const formatearData = async (acta) => {
     acta: acta?.numero_acta || '',
     infractorNombreApellido: personas || '',
     infractorDocumento: documentos || '',
-    fechaActa: acta?.fecha || '',
-    actaHs: acta?.hora || '',
-    actaObservaciones: acta?.observaciones || '',
-    lugar: acta?.lugar || '',
 
     // Vehiculo
-    titular,
     patente: acta?.vehiculo?.dominio || '',
-    chasis: acta?.vehiculo?.numero_chasis || '',
-    motor: acta?.vehiculo?.numero_motor || '',
     marca: acta?.vehiculo?.marca || '',
     modelo: acta?.vehiculo?.modelo || '',
     vehiculo: vehiculoFormatted || '',
