@@ -130,21 +130,22 @@ export default function LibreDeudaPage () {
     setDisableTipo()
   }
 
-  const hasUnpaidOrPending = () => {
+  const handleMultasPagadas = () => {
     if (isCheckingStatus) {
       return <Loading />
     }
 
-    if (Array.isArray(data?.data)) {
-      const filteredData = data.data.filter((multa) => {
-        return multa?.estadosActa?.some((estado) => {
-          const nombre = estado?.nombre?.toLowerCase()
-          return nombre !== 'pagada' && nombre !== 'sin valor monetario'
-        })
-      })
-      return filteredData.length > 0
+    if (!data?.data || !Array.isArray(data.data) || data.data.length === 0) {
+      return true
     }
-    return false
+
+    return data.data.every((multa) => {
+      const estados = multa?.estadosActa || []
+      return estados.some((estado) => {
+        const nombre = estado?.nombre?.toLowerCase() || ''
+        return nombre === 'pagada' || nombre === 'sin valor monetario'
+      })
+    })
   }
 
   const handleCheckAndShowModal = () => {
@@ -188,15 +189,13 @@ export default function LibreDeudaPage () {
   }
 
   const handleSubmit = async () => {
+    setIsVerifying(true)
+
     const dataToSend = new FormData()
 
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        if (value instanceof File || value instanceof Blob) {
-          dataToSend.append(key, value)
-        } else {
-          dataToSend.append(key, value)
-        }
+        dataToSend.append(key, value)
       }
     })
 
@@ -211,7 +210,6 @@ export default function LibreDeudaPage () {
       setErrorMessage('')
       setEnabled(false)
       setIsCheckingStatus(true)
-      setIsVerifying(true)
 
       setTimeout(() => {
         setEnabled(true)
@@ -221,6 +219,7 @@ export default function LibreDeudaPage () {
         setIsVerifying(false)
       }, 0)
     } catch (error) {
+      setIsVerifying(false)
       setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
     }
   }
@@ -286,14 +285,24 @@ export default function LibreDeudaPage () {
                       )
                     : !data?.data?.length
                         ? (
-                          <Alert color='warning' className='mb-4'>
-                            <p className='text-yellow-700 text-lg font-semibold'>
-                              No se registran multas relacionadas entre el infractor y el vehículo. Ante cualquier duda, por favor dirigite al Juzgado de Faltas Municipal, ubicado en calle Maipú Norte 550, en el horario de 07:00 a 16:00.
+                          <Alert color='success' className='mb-4'>
+                            <p className='text-green-700 text-lg font-semibold'>
+                              No se registran multas relacionadas. Puedes generar tu libre deuda.
                             </p>
+                            <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
+                              Generar Libre Deuda
+                            </Button>
                           </Alert>
                           )
-                        : hasUnpaidOrPending()
+                        : handleMultasPagadas()
                           ? (
+                            <>
+                              <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
+                                Generar Libre Deuda
+                              </Button>
+                            </>
+                            )
+                          : (
                             <Alert color='failure' className='mb-4'>
                               <p className='text-red-600 text-lg font-semibold'>
                                 No puedes generar tu libre deuda porque tienes multas pendientes.
@@ -303,11 +312,6 @@ export default function LibreDeudaPage () {
                                 Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM.
                               </p>
                             </Alert>
-                            )
-                          : (
-                            <Button className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'>
-                              Generar Libre Deuda
-                            </Button>
                             )}
                   <Button
                     className='mt-4 w-full py-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white'
@@ -518,37 +522,35 @@ export default function LibreDeudaPage () {
 
             <Modal
               show={showDeclarationModal}
-              onClose={() => setShowDeclarationModal(false)}
               size='md'
+              onClose={() => setShowDeclarationModal(false)}
               popup
             >
-              <Modal.Header className='border-b border-gray-200 dark:border-gray-700' />
+              <Modal.Header />
               <Modal.Body>
-                <div className='text-center px-4 py-2'>
+                <div className='text-center'>
                   <h3 className='mb-3 text-xl font-semibold text-gray-900 dark:text-white'>
                     Declaración Jurada
                   </h3>
-                  <p className='mb-6 text-sm text-gray-700 dark:text-gray-300'>
+                  <p className='mb-6 text-md text-gray-700 dark:text-gray-300'>
                     Los datos que estás por enviar tienen carácter de declaración jurada.
                     Asegurate de que sean correctos antes de continuar.
                   </p>
                   <div className='flex justify-center gap-4'>
                     <Button
-                      color='gray'
-                      className='w-28 rounded-lg'
+                      color='failure'
                       onClick={() => setShowDeclarationModal(false)}
                     >
                       Cancelar
                     </Button>
                     <Button
                       color='success'
-                      className='w-28 rounded-lg bg-green-600 hover:bg-green-700 text-white'
                       onClick={() => {
                         setShowDeclarationModal(false)
                         handleSubmit()
                       }}
                     >
-                      Aceptar
+                      Aceptar y Continuar
                     </Button>
                   </div>
                 </div>

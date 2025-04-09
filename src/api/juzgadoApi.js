@@ -1,7 +1,8 @@
 import axios from 'axios'
 
 const juzgadoApi = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}`
+  // baseURL: `${import.meta.env.VITE_API_URL}`
+  baseURL: 'https://api-test-juzgado.cc.gob.ar/api/v1'
 })
 
 juzgadoApi.interceptors.request.use(config => {
