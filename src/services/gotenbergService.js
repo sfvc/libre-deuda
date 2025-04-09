@@ -8,7 +8,7 @@ export const convertHtmlToPdf = async (htmlContent) => {
   // El nombre del archivo principal que Gotenberg debe renderizar
   formData.append('index.html', 'index.html')
 
-  const response = await fetch('http://localhost:3000/forms/chromium/convert/html', {
+  const response = await fetch('https://demo.gotenberg.dev/forms/chromium/convert/html', {
     method: 'POST',
     body: formData
   })
