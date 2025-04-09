@@ -9,7 +9,8 @@ juzgadoApi.interceptors.request.use(config => {
   config.headers = {
     ...config.headers,
     Authorization: `Bearer ${localStorage.getItem('token')}`,
-    'X-API-TOKEN': import.meta.env.VITE_X_API_TOKEN
+    // 'X-API-TOKEN': import.meta.env.VITE_X_API_TOKEN
+    'X-API-TOKEN': 'libreDeudaApi_Gwee7e99OmnW41e3xa0JyOKhaOYL0wDLG3tI30YKldUeUwl0'
   }
 
   return config
