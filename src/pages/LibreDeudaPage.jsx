@@ -205,9 +205,7 @@ export default function LibreDeudaPage () {
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
-      if (formData.vehiculo_id) {
-        libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
-      }
+      libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
 
       await postLibreDeuda(libreDeudaFormData)
     } catch (error) {

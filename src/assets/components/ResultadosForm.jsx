@@ -16,17 +16,22 @@ export const ResultadosForm = ({
         )
       : !data?.data?.length
           ? (
-            <Alert color='success' className='mb-4'>
-              <p className='text-green-700 text-lg font-semibold'>
-                No se registran multas relacionadas. Puedes generar tu libre deuda.
-              </p>
-              <Button
-                className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'
-                onClick={handleGenerateLibreDeuda}
-              >
-                Generar Libre Deuda
-              </Button>
-            </Alert>
+            <>
+              <Alert color='warning' className='mb-4'>
+                <p className='text-yellow-700 text-lg font-semibold'>
+                  No hay relación entre el infractor y el vehículo.
+                </p>
+              </Alert>
+
+              <Alert color='failure' className='mb-4'>
+                <p className='text-red-600 text-lg font-semibold'>
+                  {data?.data?.[0]?.juzgado_id === 2
+                    ? ' Por favor, acércate al juzgado de faltas N°2. '
+                    : ' Por favor, acércate al juzgado de faltas N°1. '}
+                  Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM.
+                </p>
+              </Alert>
+            </>
             )
           : handleMultasPagadas()
             ? (
