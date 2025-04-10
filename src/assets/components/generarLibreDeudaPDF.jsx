@@ -1,49 +1,103 @@
 import QRCode from 'qrcode'
 import { convertHtmlToPdf } from '@/services/gotenbergService'
+import logoCataCapi from '@/images/logo_CATACAPI_oscuro.png'
 
-export const generarLibreDeudaPDF = async (data) => {
-  const qrData = await QRCode.toDataURL(`https://api-test-juzgado.cc.gob.ar/api/v1/libre-deuda?persona_id=${data.persona_id || ''}`) // Mandarle la url correcta cuando lo definamos
+const convertirImagenABase64 = (ruta) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.src = ruta
+
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0)
+      const dataURL = canvas.toDataURL('image/png')
+      resolve(dataURL)
+    }
+
+    img.onerror = reject
+  })
+}
+
+export const GenerarLibreDeudaPDF = async (data) => {
+  const [qrData, logoBase64] = await Promise.all([
+    QRCode.toDataURL(`https://api-test-juzgado.cc.gob.ar/api/v1/libre-deuda?persona_id=${data.persona_id || ''}`),
+    convertirImagenABase64(logoCataCapi)
+  ])
+
+  const hoy = new Date()
+  const fechaActual = hoy.toLocaleDateString('es-AR')
+  const fechaValidez = new Date(hoy.setMonth(hoy.getMonth() + 6)).toLocaleDateString('es-AR')
 
   const html = `
-    <html>
-      <head>
-        <meta charset="UTF-8" />
-        <style>
-          body { font-family: Arial, sans-serif; padding: 3rem; }
-          h1, h2, h3 { text-align: center; }
-          .qr-container { margin-top: 2rem; text-align: center; }
-          .field { margin: 1rem 0; }
-          .label { font-weight: bold; display: inline-block; width: 150px; }
-          .line { margin: 0.5rem 0; }
-        </style>
-      </head>
-      <body>
-        <h2>MUNICIPALIDAD DE LA CIUDAD DE S.F. DEL VALLE DE CATAMARCA</h2>
-        <h3>JUZGADO MUNICIPAL DE FALTAS</h3>
-
-        <div class="field"><span class="label">LIBRE DEUDA N°:</span> ${data?.libreDeudaID || ''}</div>
-
-        ${data?.vehiculo
-? `
-          <div class="field"><span class="label">VEHÍCULO:</span> ${data.vehiculo}</div>
-          <div class="field"><span class="label">DOMINIO:</span> ${data.patente || ''} ${data.numeroTaxiRemis || ''}</div>
-        `
-: ''}
-
-        <div class="field"><span class="label">PROPIETARIO:</span> ${data.infractorNombreApellido || ''} D.N.I N° ${data.infractorDocumento || ''}</div>
-
-        <p class="line">
-          CERTIFICO QUE EL ${data?.vehiculo ? 'VEHÍCULO DESCRIPTO PRECEDENTEMENTE' : 'PROPIETARIO'} NO POSEE DEUDA AL DIA ${data?.fechaActual || ''} EN EL JUZGADO DE FALTAS MUNICIPAL.
-        </p>
-
-        <p class="line">San Fernando del Valle de Catamarca, ${data?.fechaActual || ''}</p>
-
-        <div class="qr-container">
-          <img src="${qrData}" alt="Código QR" />
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; font-size: 14px; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; }
+        .logo { width: 160px; }
+        .form-info { text-align: right; border: 1px solid #000; padding: 10px; font-size: 12px; line-height: 1.5; margin-top: 40px; }
+        .main-title { text-align: center; margin-top: 50px; font-size: 18px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 5px; }
+        .section-title { background: #f0f0f0; font-weight: bold; border: 1px solid #000; padding: 6px; margin-top: 20px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .info-table td, .info-table th { border: 1px solid #000; padding: 6px; }
+        .info-table th { background-color: #f9f9f9; text-align: left; }
+        .content-box { border: 1px solid #000; padding: 20px; font-size: 14px; line-height: 1.6; }
+        .bold { font-weight: bold; }
+        .qr-container { margin-top: 30px; text-align: center; }
+        .footer { margin-top: 20px; font-size: 12px; text-align: center; border-top: 1px solid #000; padding-top: 10px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <img src="${logoBase64}" class="logo" alt="Logo Capital" />
+        <div class="main-title">Certificado de LIBRE DEUDA</div>
+        <div class="form-info">
+          <strong>Libre Deuda Nº:</strong> ${data?.libreDeudaID || ''}
         </div>
-      </body>
-    </html>
-  `
+      </div>
+
+      <div class="section-title">Datos del Automotor</div>
+      <table class="info-table">
+        <tr>
+          <th>Patente</th><td>${data.patente || ''}</td>
+          <th>Tipo</th><td>${data.tipo || 'AUTOMOTOR'}</td>
+        </tr>
+        <tr>
+          <th>Marca</th><td>${data.marca || ''}</td>
+          <th>Modelo</th><td>${data.modelo || ''}</td>
+        </tr>
+        <tr>
+          <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
+        </tr>
+      </table>
+
+      <div class="content-box">
+        El funcionario que suscribe <span class="bold">CERTIFICA</span> que no registran deudas sin abonar en el Juzgado Municipal de Faltas, sin deuda pendiente al día de la fecha.
+
+        <br /><br />
+        A solicitud del interesado y a los fines de ser presentado ante quien corresponda, se extiende el presente <span class="bold">LIBRE DEUDA</span>.
+
+        <br /><br />
+        Válido hasta el día: <span class="bold">${fechaValidez}</span><br/>
+        San Fernando del Valle de Catamarca, ${fechaActual}
+      </div>
+
+      <div class="qr-container">
+        <img src="${qrData}" alt="Código QR" />
+      </div>
+
+      <div class="footer">
+        La veracidad de este formulario puede ser consultada escaneando el código QR o accediendo al sitio oficial.<br />
+        Generado el: ${fechaActual}
+      </div>
+    </body>
+  </html>
+`
 
   const pdfBlob = await convertHtmlToPdf(html)
   const url = window.URL.createObjectURL(pdfBlob)
