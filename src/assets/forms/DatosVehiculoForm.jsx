@@ -3,7 +3,6 @@ import { FileInput, Label, Select, TextInput, Spinner } from 'flowbite-react'
 import { useImageCompression } from '@/assets/util/useImageCompression'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '@/assets/components/SearchMarca'
-import Loading from '@/Loading'
 
 export const DatosVehiculoForm = ({
   formData,
@@ -153,7 +152,7 @@ export const DatosVehiculoForm = ({
         />
         {loadingCedula && (
           <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
-            <Loading /> Subiendo Archivo...
+            <Spinner /> Subiendo Archivo...
           </div>
         )}
       </div>

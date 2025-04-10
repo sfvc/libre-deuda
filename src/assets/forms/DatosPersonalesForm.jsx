@@ -1,8 +1,7 @@
 import React from 'react'
-import { FileInput, Label, TextInput } from 'flowbite-react'
+import { FileInput, Label, Spinner, TextInput } from 'flowbite-react'
 import { useImageCompression } from '@/assets/util/useImageCompression'
 import SearchInfractor from '@/assets/components/SearchInfractor'
-import Loading from '@/Loading'
 
 export const DatosPersonalesForm = ({
   formData,
@@ -86,7 +85,7 @@ export const DatosPersonalesForm = ({
         />
         {loadingDNI && (
           <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
-            <Loading /> Subiendo Archivo...
+            <Spinner /> Subiendo Archivo...
           </div>
         )}
       </div>
