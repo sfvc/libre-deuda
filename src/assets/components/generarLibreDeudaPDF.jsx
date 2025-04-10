@@ -23,14 +23,17 @@ const convertirImagenABase64 = (ruta) => {
 }
 
 export const GenerarLibreDeudaPDF = async (data) => {
+  const hoy = new Date()
+  const fechaActual = hoy.toLocaleDateString('es-AR')
+  const fechaDB = new Date().toISOString().split('T')[0]
+  const fechaValidez = new Date(hoy.setMonth(hoy.getMonth() + 6)).toLocaleDateString('es-AR')
+  const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo
   const [qrData, logoBase64] = await Promise.all([
-    QRCode.toDataURL(`https://api-test-juzgado.cc.gob.ar/api/v1/libre-deuda?persona_id=${data.persona_id || ''}`),
+    QRCode.toDataURL(`https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data.infractorDocumento}__${fechaDB}.pdf`),
     convertirImagenABase64(logoCataCapi)
   ])
 
-  const hoy = new Date()
-  const fechaActual = hoy.toLocaleDateString('es-AR')
-  const fechaValidez = new Date(hoy.setMonth(hoy.getMonth() + 6)).toLocaleDateString('es-AR')
+  console.log(fechaDB)
 
   const html = `
   <html>
@@ -61,20 +64,30 @@ export const GenerarLibreDeudaPDF = async (data) => {
         </div>
       </div>
 
-      <div class="section-title">Datos del Automotor</div>
-      <table class="info-table">
-        <tr>
-          <th>Patente</th><td>${data.patente || ''}</td>
-          <th>Tipo</th><td>${data.tipo || 'AUTOMOTOR'}</td>
-        </tr>
-        <tr>
-          <th>Marca</th><td>${data.marca || ''}</td>
-          <th>Modelo</th><td>${data.modelo || ''}</td>
-        </tr>
-        <tr>
-          <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
-        </tr>
-      </table>
+      ${tieneDatosVehiculo
+      ? `
+        <div class="section-title">Datos del Automotor</div>
+        <table class="info-table">
+          <tr>
+            <th>Patente</th><td>${data.patente || ''}</td>
+            <th>Tipo</th><td>${data.tipo || 'AUTOMOTOR'}</td>
+          </tr>
+          <tr>
+            <th>Marca</th><td>${data.marca || ''}</td>
+            <th>Modelo</th><td>${data.modelo || ''}</td>
+          </tr>
+          <tr>
+            <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
+          </tr>
+        </table>
+      `
+      : `
+        <table class="info-table">
+          <tr>
+            <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
+          </tr>
+        </table>
+      `}
 
       <div class="content-box">
         El funcionario que suscribe <span class="bold">CERTIFICA</span> que no registran deudas sin abonar en el Juzgado Municipal de Faltas, sin deuda pendiente al día de la fecha.
@@ -84,7 +97,7 @@ export const GenerarLibreDeudaPDF = async (data) => {
 
         <br /><br />
         Válido hasta el día: <span class="bold">${fechaValidez}</span><br/>
-        San Fernando del Valle de Catamarca, ${fechaActual}
+        San Fernando del Valle de Catamarca <span class="bold">${fechaActual}</span>
       </div>
 
       <div class="qr-container">

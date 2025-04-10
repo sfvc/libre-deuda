@@ -42,6 +42,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
         persona_id: per.id,
         nombre: per.nombre,
         apellido: per.apellido,
+        dni: per.numero_documento,
         email: per.email,
         telefono: per.telefono,
         cuit: per.cuit,

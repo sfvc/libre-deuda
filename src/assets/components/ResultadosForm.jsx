@@ -7,6 +7,7 @@ export const ResultadosForm = ({
   data,
   handleMultasPagadas,
   handleGenerateLibreDeuda,
+  isGeneratingPdf,
   resetForm
 }) => (
   <div className='text-center w-full'>
@@ -42,10 +43,11 @@ export const ResultadosForm = ({
                   </p>
                 </Alert>
                 <Button
-                  className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg'
+                  className='mt-6 w-full py-3 rounded-lg bg-blue-500 hover:bg-blue-600 transition duration-300 ease-in-out text-white text-lg flex justify-center items-center'
                   onClick={handleGenerateLibreDeuda}
+                  disabled={isGeneratingPdf}
                 >
-                  Generar Libre Deuda
+                  {isGeneratingPdf ? <Loading /> : 'Generar Libre Deuda'}
                 </Button>
               </>
               )

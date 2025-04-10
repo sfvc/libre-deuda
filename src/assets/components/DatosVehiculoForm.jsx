@@ -1,7 +1,9 @@
 import React from 'react'
-import { FileInput, Label, Select, TextInput } from 'flowbite-react'
+import { FileInput, Label, Select, TextInput, Spinner } from 'flowbite-react'
+import { useImageCompression } from '@/assets/util/useImageCompression'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '@/assets/components/SearchMarca'
+import Loading from '@/Loading'
 
 export const DatosVehiculoForm = ({
   formData,
@@ -17,124 +19,144 @@ export const DatosVehiculoForm = ({
   tipos,
   isLoadingTipos,
   errorTipos
-}) => (
-  <>
-    <h4 className='mb-2 font-medium text-gray-600'>Vehículo</h4>
+}) => {
+  const { isLoading: loadingCedula, loadingMarbete, handleCompressImage } = useImageCompression()
 
-    <SearchVehiculo onSelectVehiculo={handleVehiculoSelect} />
+  return (
+    <>
+      <h4 className='mb-2 font-medium text-gray-600'>Vehículo</h4>
 
-    {formData.marca === 'INDETERMINADO' || !formData.marca
-      ? (
-        <SearchMarca
-          onSelectMarca={(marca) => {
-            handleInputChange({
-              target: {
-                name: 'marca',
-                value: marca?.nombre || ''
-              }
-            })
-            handleInputChange({
-              target: {
-                name: 'marca_id',
-                value: marca?.id || ''
-              }
-            })
-          }}
-        />
-        )
-      : (
-        <TextInput
-          name='marca'
-          placeholder='Marca del Vehículo'
-          className='mb-3'
-          value={formData.marca || ''}
-          onChange={handleInputChange}
-          disabled={disableMarca}
-        />
-        )}
+      <SearchVehiculo onSelectVehiculo={handleVehiculoSelect} />
 
-    <input type='hidden' name='marca_id' value={formData.marca_id || ''} />
-
-    <TextInput
-      name='modelo'
-      placeholder='Modelo del Vehículo'
-      className='mb-3'
-      value={formData.modelo || ''}
-      onChange={handleInputChange}
-      disabled={formData.modelo !== '0' && disableModelo}
-    />
-
-    <Select
-      name='tipo'
-      className='mb-2'
-      value={formData.tipo || ''}
-      onChange={handleInputChange}
-      disabled={disableTipo}
-    >
-      <option value=''>Seleccione el Tipo de Vehículo</option>
-      {isLoadingTipos
+      {formData.marca === 'INDETERMINADO' || !formData.marca
         ? (
-          <option>Cargando...</option>
+          <SearchMarca
+            onSelectMarca={(marca) => {
+              handleInputChange({
+                target: { name: 'marca', value: marca?.nombre || '' }
+              })
+              handleInputChange({
+                target: { name: 'marca_id', value: marca?.id || '' }
+              })
+            }}
+          />
           )
-        : errorTipos
-          ? (
-            <option>Error al cargar</option>
-            )
-          : (
-              tipos.map((tipo) => (
-                <option key={tipo.id} value={tipo.nombre}>
-                  {tipo.nombre}
-                </option>
-              ))
-            )}
-    </Select>
+        : (
+          <TextInput
+            name='marca'
+            placeholder='Marca del Vehículo'
+            className='mb-3'
+            value={formData.marca || ''}
+            onChange={handleInputChange}
+            disabled={disableMarca}
+          />
+          )}
 
-    {formData.tipo === 'SERVICIOS PúBLICOS' && (
-      <div>
+      <input type='hidden' name='marca_id' value={formData.marca_id || ''} />
+
+      <TextInput
+        name='modelo'
+        placeholder='Modelo del Vehículo'
+        className='mb-3'
+        value={formData.modelo || ''}
+        onChange={handleInputChange}
+        disabled={formData.modelo !== '0' && disableModelo}
+      />
+
+      <Select
+        name='tipo'
+        className='mb-2'
+        value={formData.tipo || ''}
+        onChange={handleInputChange}
+        disabled={disableTipo}
+      >
+        <option value=''>Seleccione el Tipo de Vehículo</option>
+        {isLoadingTipos
+          ? (
+            <option>Cargando...</option>
+            )
+          : errorTipos
+            ? (
+              <option>Error al cargar</option>
+              )
+            : (
+                tipos.map((tipo) => (
+                  <option key={tipo.id} value={tipo.nombre}>
+                    {tipo.nombre}
+                  </option>
+                ))
+              )}
+      </Select>
+
+      {formData.tipo === 'SERVICIOS PúBLICOS' && (
         <div>
           <div className='mb-2 block'>
-            <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del Marbete' />
+            <Label className='text-xl text-green-500' htmlFor='foto_marbete' value='Foto del Marbete' />
           </div>
           <FileInput
             name='foto_marbete'
             placeholder='Marbete del Vehículo'
             type='file'
             className='mb-3'
-            onChange={(e) => {
-              setMarbeteImage(e.target.files[0])
-              handleInputChange(e)
+            onChange={async (e) => {
+              const file = e.target.files[0]
+              if (file) {
+                const compressed = await handleCompressImage(file)
+                setMarbeteImage(compressed)
+                handleInputChange({
+                  target: { name: 'foto_marbete', value: compressed }
+                })
+              }
             }}
             accept='image/*'
             capture='environment'
+            disabled={loadingMarbete}
+          />
+          {loadingMarbete && (
+            <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
+              <Spinner size='sm' /> Subiendo Archivo...
+            </div>
+          )}
+
+          <TextInput
+            name='numero_taxi_remis'
+            placeholder='Número de Taxi/Remis/Colectivo'
+            className='mb-3'
+            value={formData.numero_taxi_remis || ''}
+            onChange={handleInputChange}
           />
         </div>
+      )}
 
-        <TextInput
-          name='numero_taxi_remis'
-          placeholder='Número de Taxi/Remis/Colectivo'
+      <div>
+        <div className='mb-2 block'>
+          <Label className='text-xl text-green-500' htmlFor='foto_cedula' value='Foto de la Cédula del Vehículo' />
+        </div>
+        <FileInput
+          name='foto_cedula'
+          placeholder='Cedula del Vehículo'
+          type='file'
           className='mb-3'
-          value={formData.numero_taxi_remis || ''}
-          onChange={handleInputChange}
+          onChange={async (e) => {
+            const file = e.target.files[0]
+            if (file) {
+              const compressed = await handleCompressImage(file)
+              setCedulaImage(compressed)
+              handleInputChange({
+                target: { name: 'foto_cedula', value: compressed }
+              })
+            }
+          }}
+          accept='image/*'
+          capture='environment'
+          disabled={loadingCedula}
         />
+        {loadingCedula && (
+          <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
+            <Loading /> Subiendo Archivo...
+          </div>
+        )}
       </div>
-    )}
-
-    <div>
-      <div className='mb-2 block'>
-        <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto de la Cédula del Vehículo' />
-      </div>
-      <FileInput
-        name='foto_cedula'
-        placeholder='Cedula del Vehículo'
-        type='file'
-        className='mb-3'
-        onChange={(e) => {
-          setCedulaImage(e.target.files[0])
-          handleInputChange(e)
-        }}
-        accept='image/*'
-        capture='environment'
-      />
-    </div>
-  </>
-)
+    </>
+  )
+}

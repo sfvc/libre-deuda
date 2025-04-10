@@ -8,6 +8,7 @@ import { ModoConsulta } from '@/assets/components/ModoConsulta'
 import { ResultadosForm } from '@/assets/components/ResultadosForm'
 import { DatosPersonalesForm } from '@/assets/components/DatosPersonalesForm'
 import { DatosVehiculoForm } from '@/assets/components/DatosVehiculoForm'
+import { convertHtmlToPdf } from '@/services/gotenbergService'
 import DefaultNavbar from '@/assets/layout/DefaultNavbar'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
 import Loading from '@/Loading'
@@ -28,6 +29,7 @@ export default function LibreDeudaPage () {
   const [dniImage, setDniImage] = useState(null)
   const [cedulaImage, setCedulaImage] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [formData, setFormData] = useState({
     persona_id: null,
     nombre: null,
@@ -96,7 +98,8 @@ export default function LibreDeudaPage () {
       nombre: persona?.nombre || '',
       apellido: persona?.apellido || '',
       email: persona.email || '',
-      telefono: persona.telefono || ''
+      telefono: persona.telefono || '',
+      dni: persona?.documento || persona?.dni || ''
     }))
 
     setShouldDisableFields(false)
@@ -179,6 +182,7 @@ export default function LibreDeudaPage () {
   }
 
   const handleGenerateLibreDeuda = async () => {
+    setIsGeneratingPdf(true)
     try {
       const acta = {
         infractores: [{
@@ -201,16 +205,21 @@ export default function LibreDeudaPage () {
       formattedData.persona_id = formData.persona_id
       formattedData.libreDeudaID = Date.now()
 
-      await GenerarLibreDeudaPDF(formattedData)
+      const htmlContent = await GenerarLibreDeudaPDF(formattedData)
+      const pdfBlob = await convertHtmlToPdf(htmlContent)
+      const pdfFile = new File([pdfBlob], 'libre-deuda.pdf', { type: 'application/pdf' })
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
       libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
+      libreDeudaFormData.append('libre_deuda', pdfFile)
 
       await postLibreDeuda(libreDeudaFormData)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')
+    } finally {
+      setIsGeneratingPdf(false)
     }
   }
 
@@ -320,6 +329,7 @@ export default function LibreDeudaPage () {
                   data={data}
                   handleMultasPagadas={handleMultasPagadas}
                   handleGenerateLibreDeuda={handleGenerateLibreDeuda}
+                  isGeneratingPdf={isGeneratingPdf}
                   resetForm={resetForm}
                 />
                 )
