@@ -129,7 +129,7 @@ export const DatosVehiculoForm = ({
 
       <div>
         <div className='mb-2 block'>
-          <Label className='text-xl text-green-500' htmlFor='foto_cedula' value='Foto de la Cédula del Vehículo' />
+          <Label className='text-xl text-green-500' htmlFor='foto_cedula' value='Foto de la Cédula del Titular' />
         </div>
         <FileInput
           name='foto_cedula'

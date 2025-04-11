@@ -13,7 +13,7 @@ export const ModoConsulta = ({ modoConsulta, setModoConsulta }) => (
       className='mb-4 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 dark:focus:ring-blue-500 transition-all duration-200'
     >
       <option value='simple'>Consulta por Persona</option>
-      <option value='completo'>Consulta por Persona y Vehículo</option>
+      <option value='completo'>Consulta por Vehículo y Titular</option>
     </Select>
   </div>
 )

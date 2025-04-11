@@ -15,7 +15,7 @@ export const DatosPersonalesForm = ({
 
   return (
     <div>
-      <h4 className='mb-2 font-medium text-gray-600'>Titular</h4>
+      <h4 className='mb-2 font-medium text-gray-600'>Persona</h4>
 
       <SearchInfractor onSelectPersona={handlePersonaSelect} />
 
@@ -62,7 +62,7 @@ export const DatosPersonalesForm = ({
 
       <div>
         <div className='mb-2 block'>
-          <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del frente del DNI titular' />
+          <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del frente del DNI' />
         </div>
         <FileInput
           name='foto_dni'
