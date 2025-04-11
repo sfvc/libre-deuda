@@ -3,8 +3,8 @@ import { Alert, Button, Modal } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
 import { getActasFilter, getTipos, postPersonaDatos, postLibreDeuda } from '@/services/multasService'
 import { formatearData } from '@/assets/util/formatData'
-import { GenerarLibreDeudaPDF } from '@/assets/components/GenerarLibreDeudaPDF'
 import { ModoConsulta } from '@/assets/components/ModoConsulta'
+import { generarLibreDeudaPDF } from '@/assets/components/generarLibreDeudaPDF'
 import { ResultadosForm } from '@/assets/forms/ResultadosForm'
 import { DatosPersonalesForm } from '@/assets/forms/DatosPersonalesForm'
 import { DatosVehiculoForm } from '@/assets/forms/DatosVehiculoForm'
@@ -205,9 +205,9 @@ export default function LibreDeudaPage () {
       formattedData.persona_id = formData.persona_id
       formattedData.libreDeudaID = Date.now()
 
-      const htmlContent = await GenerarLibreDeudaPDF(formattedData)
+      const htmlContent = await generarLibreDeudaPDF(formattedData)
       const pdfBlob = await convertHtmlToPdf(htmlContent)
-      const pdfFile = new File([pdfBlob], 'libre-deuda.pdf', { type: 'application/pdf' })
+      const pdfFile = new File([pdfBlob], 'libre-deuda.pdf')
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
