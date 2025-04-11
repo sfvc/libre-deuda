@@ -8,7 +8,6 @@ import { generarLibreDeudaPDF } from '@/assets/components/generarLibreDeudaPDF'
 import { ResultadosForm } from '@/assets/forms/ResultadosForm'
 import { DatosPersonalesForm } from '@/assets/forms/DatosPersonalesForm'
 import { DatosVehiculoForm } from '@/assets/forms/DatosVehiculoForm'
-import { convertHtmlToPdf } from '@/services/gotenbergService'
 import DefaultNavbar from '@/assets/layout/DefaultNavbar'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
 import Loading from '@/Loading'
@@ -204,17 +203,16 @@ export default function LibreDeudaPage () {
       const formattedData = await formatearData(acta)
       formattedData.persona_id = formData.persona_id
       formattedData.libreDeudaID = Date.now()
-
-      const htmlContent = await generarLibreDeudaPDF(formattedData)
-      const pdfBlob = await convertHtmlToPdf(htmlContent)
-      const pdfFile = new File([pdfBlob], 'libre-deuda.pdf')
+      const { pdfBlob, fileName } = await generarLibreDeudaPDF(formattedData)
+      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' })
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
       libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
-      await postLibreDeuda(libreDeudaFormData)
+      const response = await postLibreDeuda(libreDeudaFormData)
+      console.log('Libre deuda generado y enviado correctamente:', response)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')

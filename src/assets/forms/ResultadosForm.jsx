@@ -20,7 +20,7 @@ export const ResultadosForm = ({
           <>
             <Alert color='success' className='mb-4'>
               <p className='text-green-700 text-lg font-semibold'>
-                No posees multas o todas están pagadas.
+                El ciudadano no registra infracciones impagas al momento de la consulta.
               </p>
             </Alert>
             <Button

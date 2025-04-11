@@ -31,8 +31,10 @@ export const generarLibreDeudaPDF = async (data) => {
   const fechaValidez = new Date(new Date().setMonth(hoy.getMonth() + 2))
   const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo
 
+  const qrUrl = data.urlParaQR || `https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data.infractorDocumento}_${fechaDB}.pdf`
+
   const [qrData, logoBase64] = await Promise.all([
-    QRCode.toDataURL(`https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data.infractorDocumento}_${fechaDB}.pdf`),
+    QRCode.toDataURL(qrUrl),
     convertirImagenABase64(logoCataCapi)
   ])
 
@@ -115,6 +117,12 @@ export const generarLibreDeudaPDF = async (data) => {
 `
 
   const pdfBlob = await convertHtmlToPdf(html)
+  const fileName = `${data.infractorDocumento}_${fechaDB}.pdf`
   const url = window.URL.createObjectURL(pdfBlob)
   window.open(url, '_blank')
+
+  return {
+    pdfBlob,
+    fileName
+  }
 }
