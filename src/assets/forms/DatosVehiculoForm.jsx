@@ -1,6 +1,6 @@
 import React from 'react'
 import { FileInput, Label, Select, TextInput, Spinner } from 'flowbite-react'
-import { useImageCompression } from '@/assets/util/useImageCompression'
+import { useImageCompression } from '@/assets/components/useImageCompression'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '@/assets/components/SearchMarca'
 

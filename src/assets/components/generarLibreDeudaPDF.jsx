@@ -33,8 +33,6 @@ export const GenerarLibreDeudaPDF = async (data) => {
     convertirImagenABase64(logoCataCapi)
   ])
 
-  console.log(fechaDB)
-
   const html = `
   <html>
     <head>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { FileInput, Label, Spinner, TextInput } from 'flowbite-react'
-import { useImageCompression } from '@/assets/util/useImageCompression'
+import { useImageCompression } from '@/assets/components/useImageCompression'
 import SearchInfractor from '@/assets/components/SearchInfractor'
 
 export const DatosPersonalesForm = ({
