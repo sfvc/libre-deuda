@@ -7,6 +7,7 @@ import juzgadoApi from '@/api/juzgadoApi'
 function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
   const [search, setSearch] = useState('')
   const [show, setShow] = useState(true)
+  const [isTyping, setIsTyping] = useState(false)
 
   const { data: vehiculos = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarVehiculo', search],
@@ -20,7 +21,10 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
 
   useEffect(() => {
     if (search.length > 2) {
-      const timeoutId = setTimeout(() => refetch(), 1000)
+      const timeoutId = setTimeout(() => {
+        refetch()
+        setIsTyping(false)
+      }, 1000)
       return () => clearTimeout(timeoutId)
     } else {
       setShow(true)
@@ -57,7 +61,10 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
           type='text'
           placeholder='Ingrese la patente del vehículo'
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value)
+            setIsTyping(true)
+          }}
         />
 
         <div type='button' className='absolute top-3 right-3'>
@@ -81,7 +88,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
 
         {search.length >= 2 && show && (
           <ul className='w-full max-h-56 overflow-y-auto absolute z-10 bg-white shadow-md'>
-            {isFetching
+            {isTyping || isFetching
               ? (
                 <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
                   Buscando vehículo...

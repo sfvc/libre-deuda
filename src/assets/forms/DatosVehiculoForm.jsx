@@ -30,6 +30,7 @@ export const DatosVehiculoForm = ({
       {formData.marca === 'INDETERMINADO' || !formData.marca
         ? (
           <SearchMarca
+            disabled={disableMarca}
             onSelectMarca={(marca) => {
               handleInputChange({
                 target: { name: 'marca', value: marca?.nombre || '' }
@@ -47,7 +48,6 @@ export const DatosVehiculoForm = ({
             className='mb-3'
             value={formData.marca || ''}
             onChange={handleInputChange}
-            disabled={disableMarca}
           />
           )}
 
@@ -59,7 +59,7 @@ export const DatosVehiculoForm = ({
         className='mb-3'
         value={formData.modelo || ''}
         onChange={handleInputChange}
-        disabled={formData.modelo !== '0' && disableModelo}
+        disabled={disableModelo}
       />
 
       <Select
@@ -69,26 +69,28 @@ export const DatosVehiculoForm = ({
         onChange={handleInputChange}
         disabled={disableTipo}
       >
-        <option value=''>Seleccione el Tipo de Vehículo</option>
+        <option value='' className='text-gray-400'>Seleccione el Tipo de Vehículo</option>
         {isLoadingTipos
-          ? (
-            <option>Cargando...</option>
-            )
+          ? <option>Cargando...</option>
           : errorTipos
-            ? (
-              <option>Error al cargar</option>
-              )
-            : (
-                tipos.map((tipo) => (
-                  <option key={tipo.id} value={tipo.nombre}>
-                    {tipo.nombre}
-                  </option>
-                ))
-              )}
+            ? <option>Error al cargar</option>
+            : tipos.map((tipo) => (
+              <option key={tipo.id} value={tipo.nombre}>
+                {tipo.nombre}
+              </option>
+            ))}
       </Select>
 
       {formData.tipo === 'SERVICIOS PúBLICOS' && (
         <div>
+          <TextInput
+            name='numero_taxi_remis'
+            placeholder='Número de Taxi/Remis/Colectivo'
+            className='mb-3'
+            value={formData.numero_taxi_remis || ''}
+            onChange={handleInputChange}
+          />
+
           <div className='mb-2 block'>
             <Label className='text-xl text-green-500' htmlFor='foto_marbete' value='Foto del Marbete' />
           </div>
@@ -116,14 +118,6 @@ export const DatosVehiculoForm = ({
               <Spinner size='sm' /> Subiendo Archivo...
             </div>
           )}
-
-          <TextInput
-            name='numero_taxi_remis'
-            placeholder='Número de Taxi/Remis/Colectivo'
-            className='mb-3'
-            value={formData.numero_taxi_remis || ''}
-            onChange={handleInputChange}
-          />
         </div>
       )}
 

@@ -26,7 +26,7 @@ const convertirImagenABase64 = (ruta) => {
 export const generarLibreDeudaPDF = async (data) => {
   const hoy = new Date()
   const fechaActual = hoy.toLocaleDateString()
-  const horaActual = hoy.toLocaleTimeString(('es-AR', { hour: '2-digit', minute: '2-digit' }))
+  const horaActual = hoy.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
   const fechaDB = new Date().toISOString().split('T')[0]
   const fechaValidez = new Date(new Date().setMonth(hoy.getMonth() + 2))
   const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo
@@ -92,7 +92,7 @@ export const generarLibreDeudaPDF = async (data) => {
       }
 
       <div class="content-box">
-        El/la funcionario/a actuante <span class="bold">CERTIFICA</span> que, conforme a los registros del Juzgado Municipal de Faltas, el/la ciudadano/a mencionado/a no presenta deudas pendientes al día de la fecha.
+        El funcionario actuante <span class="bold">CERTIFICA</span> que, conforme a los registros del Juzgado Municipal de Faltas, el ciudadano mencionado no presenta deudas pendientes al día de la fecha.
 
         <br /><br />
         El presente certificado de <span class="bold">LIBRE DEUDA</span> se emite a solicitud del interesado, a los fines que estime corresponder.

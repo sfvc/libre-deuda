@@ -9,13 +9,16 @@ export const DatosPersonalesForm = ({
   handlePersonaSelect,
   shouldDisableFields,
   dniImage,
-  setDniImage
+  setDniImage,
+  modoConsulta = 'simple'
 }) => {
   const { isLoading: loadingDNI, handleCompressImage } = useImageCompression()
 
   return (
     <div>
-      <h4 className='mb-2 font-medium text-gray-600'>Persona</h4>
+      <h4 className='mb-2 font-medium text-gray-600'>
+        {modoConsulta === 'simple' ? 'Persona' : 'Titular'}
+      </h4>
 
       <SearchInfractor onSelectPersona={handlePersonaSelect} />
 

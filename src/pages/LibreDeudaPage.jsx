@@ -351,6 +351,7 @@ export default function LibreDeudaPage () {
                       shouldDisableFields={shouldDisableFields}
                       dniImage={dniImage}
                       setDniImage={setDniImage}
+                      modoConsulta={modoConsulta}
                     />
 
                     {modoConsulta === 'completo' && (

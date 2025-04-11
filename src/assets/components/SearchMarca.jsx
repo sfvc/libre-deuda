@@ -6,6 +6,7 @@ import juzgadoApi from '@/api/juzgadoApi'
 function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
   const [search, setSearch] = useState('')
   const [show, setShow] = useState(true)
+  const [isTyping, setIsTyping] = useState(false)
 
   const { data: marcas = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarMarca', search],
@@ -20,7 +21,10 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
 
   useEffect(() => {
     if (search.length > 2) {
-      const timeoutId = setTimeout(() => refetch(), 1000)
+      const timeoutId = setTimeout(() => {
+        refetch()
+        setIsTyping(false)
+      }, 1000)
       return () => clearTimeout(timeoutId)
     } else {
       setShow(true)
@@ -50,8 +54,11 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
         type='text'
         placeholder='Ingrese la marca del vehículo'
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
         disabled={disabled}
+        onChange={(e) => {
+          setSearch(e.target.value)
+          setIsTyping(true)
+        }}
       />
       <div type='button' className='absolute top-3 right-3'>
         <svg
@@ -73,7 +80,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
       </div>
       {search.length >= 2 && show && (
         <ul className='w-full overflow-y-auto max-h-96 absolute z-10 bg-white'>
-          {isFetching
+          {isTyping || isFetching
             ? (
               <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
                 Buscando marca...

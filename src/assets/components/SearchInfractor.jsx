@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   const [search, setSearch] = useState('')
   const [show, setShow] = useState(true)
+  const [isTyping, setIsTyping] = useState(false)
 
   const { data: personas = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarPersonas', search],
@@ -20,7 +21,10 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
 
   useEffect(() => {
     if (search.length > 2) {
-      const timeoutId = setTimeout(() => refetch(), 1000)
+      const timeoutId = setTimeout(() => {
+        refetch()
+        setIsTyping(false)
+      }, 1000)
       return () => clearTimeout(timeoutId)
     } else {
       setShow(true)
@@ -52,11 +56,11 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
     }
   }
 
-  // Función para permitir solo números
   const handleSearchChange = (e) => {
     const value = e.target.value
     if (/^\d*$/.test(value)) {
       setSearch(value)
+      setIsTyping(true)
     }
   }
 
@@ -92,7 +96,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
 
         {search.length >= 2 && show && (
           <ul className='w-full max-h-52 overflow-y-auto absolute z-10 bg-white shadow-md'>
-            {isFetching
+            {isTyping || isFetching
               ? (
                 <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
                   Buscando personas...
@@ -118,7 +122,8 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                   )
                 : (
                   <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
-                    No se encontró a la persona.
+                    <p>No se encontró a la persona.</p>
+                    <p className='text-sm text-gray-500'>Por favor, acércate al Juzgado de Faltas Municipal, Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM ante cualquier duda.</p>
                   </li>
                   )}
           </ul>
