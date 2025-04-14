@@ -19,9 +19,9 @@ COPY . ./
 RUN npm install --force
 #RUN npm install -g typescript
 
-
 # Construir la aplicación
 RUN npm run build
+
 
 # Etapa de producción
 FROM nginx:alpine
