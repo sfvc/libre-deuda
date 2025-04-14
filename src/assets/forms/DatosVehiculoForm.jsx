@@ -49,7 +49,7 @@ export const DatosVehiculoForm = ({
 }) => {
   const { isLoading: loadingCedula, loadingMarbete, handleCompressImage } = useImageCompression()
 
-  const handleFileChange = async (e, setter, name, setSize) => {
+  const handleFileChange = async (e, setter, name) => {
     const file = e.target.files[0]
     if (file) {
       const compressed = await handleCompressImage(file)
