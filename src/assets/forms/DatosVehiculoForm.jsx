@@ -1,8 +1,40 @@
-import React from 'react'
-import { FileInput, Label, Select, TextInput, Spinner } from 'flowbite-react'
+import React, { useState } from 'react'
+import { FileInput, Label, Select, TextInput, Spinner, Card } from 'flowbite-react'
 import { useImageCompression } from '@/assets/components/useImageCompression'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '@/assets/components/SearchMarca'
+
+const FotoDocumentoInput = ({ label, name, value, loading, onChange, fileSize }) => (
+  <div className='mb-4'>
+    <Label className='text-sm font-medium text-gray-700 mb-1 block'>{label}</Label>
+    {value && (
+      <img
+        src={URL.createObjectURL(value)}
+        alt={label}
+        className='h-auto w-auto rounded shadow mb-2 object-cover'
+      />
+    )}
+    <FileInput
+      name={name}
+      type='file'
+      accept='image/*'
+      capture='environment'
+      onChange={onChange}
+      disabled={loading}
+    />
+    {loading && (
+      <div className='mt-1 text-sm text-blue-600 flex items-center gap-2'>
+        <Spinner size='sm' /> Subiendo archivo...
+      </div>
+    )}
+    {fileSize?.original && fileSize?.compressed && !loading && (
+      <p className='text-sm text-gray-600 mt-1'>
+        Peso original: {fileSize.original} KB <br />
+        Peso comprimido: {fileSize.compressed} KB
+      </p>
+    )}
+  </div>
+)
 
 export const DatosVehiculoForm = ({
   formData,
@@ -11,19 +43,40 @@ export const DatosVehiculoForm = ({
   disableMarca,
   disableModelo,
   disableTipo,
-  cedulaImage,
+  cedulaImageFrente,
+  cedulaImageDorso,
   marbeteImage,
-  setCedulaImage,
+  setCedulaImageFrente,
+  setCedulaImageDorso,
   setMarbeteImage,
   tipos,
   isLoadingTipos,
   errorTipos
 }) => {
   const { isLoading: loadingCedula, loadingMarbete, handleCompressImage } = useImageCompression()
+  const [cedulaFrenteSize, setCedulaFrenteSize] = useState({ original: null, compressed: null })
+  const [cedulaDorsoSize, setCedulaDorsoSize] = useState({ original: null, compressed: null })
+  const [marbeteSize, setMarbeteSize] = useState({ original: null, compressed: null })
+
+  const handleFileChange = async (e, setter, name, setSize) => {
+    const file = e.target.files[0]
+    if (file) {
+      const originalSize = Math.round(file.size / 1024)
+      const compressed = await handleCompressImage(file)
+      const compressedSize = Math.round(compressed.size / 1024)
+
+      setter(compressed)
+      setSize({ original: originalSize, compressed: compressedSize })
+
+      handleInputChange({
+        target: { name, value: compressed }
+      })
+    }
+  }
 
   return (
     <>
-      <h4 className='mb-2 font-medium text-gray-600'>Vehículo</h4>
+      <h4 className='mb-2 mt-2 font-medium text-gray-600'>Vehículo</h4>
 
       <SearchVehiculo onSelectVehiculo={handleVehiculoSelect} />
 
@@ -64,25 +117,31 @@ export const DatosVehiculoForm = ({
 
       <Select
         name='tipo'
-        className='mb-2'
+        className='mb-3'
         value={formData.tipo || ''}
         onChange={handleInputChange}
         disabled={disableTipo}
       >
         <option value='' className='text-gray-400'>Seleccione el Tipo de Vehículo</option>
         {isLoadingTipos
-          ? <option>Cargando...</option>
+          ? (
+            <option>Cargando...</option>
+            )
           : errorTipos
-            ? <option>Error al cargar</option>
-            : tipos.map((tipo) => (
-              <option key={tipo.id} value={tipo.nombre}>
-                {tipo.nombre}
-              </option>
-            ))}
+            ? (
+              <option>Error al cargar</option>
+              )
+            : (
+                tipos.map((tipo) => (
+                  <option key={tipo.id} value={tipo.nombre}>
+                    {tipo.nombre}
+                  </option>
+                ))
+              )}
       </Select>
 
       {formData.tipo === 'SERVICIOS PúBLICOS' && (
-        <div>
+        <>
           <TextInput
             name='numero_taxi_remis'
             placeholder='Número de Taxi/Remis/Colectivo'
@@ -91,65 +150,39 @@ export const DatosVehiculoForm = ({
             onChange={handleInputChange}
           />
 
-          <div className='mb-2 block'>
-            <Label className='text-xl text-green-500' htmlFor='foto_marbete' value='Foto del Marbete' />
-          </div>
-          <FileInput
-            name='foto_marbete'
-            placeholder='Marbete del Vehículo'
-            type='file'
-            className='mb-3'
-            onChange={async (e) => {
-              const file = e.target.files[0]
-              if (file) {
-                const compressed = await handleCompressImage(file)
-                setMarbeteImage(compressed)
-                handleInputChange({
-                  target: { name: 'foto_marbete', value: compressed }
-                })
-              }
-            }}
-            accept='image/*'
-            capture='environment'
-            disabled={loadingMarbete}
-          />
-          {loadingMarbete && (
-            <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
-              <Spinner size='sm' /> Subiendo Archivo...
-            </div>
-          )}
-        </div>
+          <Card className='p-4 shadow-sm mb-4'>
+            <h5 className='text-lg font-semibold text-gray-700 mb-2'>Foto del Marbete</h5>
+            <FotoDocumentoInput
+              label='Marbete del Vehículo'
+              name='foto_marbete'
+              value={marbeteImage}
+              loading={loadingMarbete}
+              onChange={(e) => handleFileChange(e, setMarbeteImage, 'foto_marbete', setMarbeteSize)}
+              fileSize={marbeteSize}
+            />
+          </Card>
+        </>
       )}
 
-      <div>
-        <div className='mb-2 block'>
-          <Label className='text-xl text-green-500' htmlFor='foto_cedula' value='Foto de la Cédula del Titular' />
-        </div>
-        <FileInput
-          name='foto_cedula'
-          placeholder='Cedula del Vehículo'
-          type='file'
-          className='mb-3'
-          onChange={async (e) => {
-            const file = e.target.files[0]
-            if (file) {
-              const compressed = await handleCompressImage(file)
-              setCedulaImage(compressed)
-              handleInputChange({
-                target: { name: 'foto_cedula', value: compressed }
-              })
-            }
-          }}
-          accept='image/*'
-          capture='environment'
-          disabled={loadingCedula}
+      <Card className='shadow-sm'>
+        <FotoDocumentoInput
+          label='Frente de la Cédula del Titular'
+          name='foto_cedula_frente'
+          value={cedulaImageFrente}
+          loading={loadingCedula}
+          onChange={(e) => handleFileChange(e, setCedulaImageFrente, 'foto_cedula_frente', setCedulaFrenteSize)}
+          fileSize={cedulaFrenteSize}
         />
-        {loadingCedula && (
-          <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
-            <Spinner /> Subiendo Archivo...
-          </div>
-        )}
-      </div>
+
+        <FotoDocumentoInput
+          label='Dorso de la Cédula del Titular'
+          name='foto_cedula_dorso'
+          value={cedulaImageDorso}
+          loading={loadingCedula}
+          onChange={(e) => handleFileChange(e, setCedulaImageDorso, 'foto_cedula_dorso', setCedulaDorsoSize)}
+          fileSize={cedulaDorsoSize}
+        />
+      </Card>
     </>
   )
 }
