@@ -1,18 +1,70 @@
-import React from 'react'
-import { FileInput, Label, Spinner, TextInput } from 'flowbite-react'
+import React, { useState } from 'react'
+import { FileInput, Label, Spinner, TextInput, Card } from 'flowbite-react'
 import { useImageCompression } from '@/assets/components/useImageCompression'
 import SearchInfractor from '@/assets/components/SearchInfractor'
+
+const FotoDniInput = ({ label, name, value, onChange, loading, fileSize }) => (
+  <div className='mb-4'>
+    <Label className='text-sm font-medium text-gray-700 mb-1 block'>{label}</Label>
+    {value && (
+      <img
+        src={URL.createObjectURL(value)}
+        alt={label}
+        className='h-auto w-auto rounded shadow mb-2 object-cover'
+      />
+    )}
+    <FileInput
+      name={name}
+      type='file'
+      accept='image/*'
+      capture='environment'
+      onChange={onChange}
+      disabled={loading}
+    />
+    {loading && (
+      <div className='mt-1 text-sm text-blue-600 flex items-center gap-2'>
+        <Spinner size='sm' /> Subiendo archivo...
+      </div>
+    )}
+    {fileSize?.original && fileSize?.compressed && !loading && (
+      <p className='text-sm text-gray-600 mt-1'>
+        Peso original: {fileSize.original} KB <br />
+        Peso comprimido: {fileSize.compressed} KB
+      </p>
+    )}
+  </div>
+)
 
 export const DatosPersonalesForm = ({
   formData,
   handleInputChange,
   handlePersonaSelect,
   shouldDisableFields,
-  dniImage,
-  setDniImage,
+  dniImageFrente,
+  setDniImageFrente,
+  dniImageDorso,
+  setDniImageDorso,
   modoConsulta = 'simple'
 }) => {
   const { isLoading: loadingDNI, handleCompressImage } = useImageCompression()
+  const [dniFrenteSize, setDniFrenteSize] = useState({ original: null, compressed: null })
+  const [dniDorsoSize, setDniDorsoSize] = useState({ original: null, compressed: null })
+
+  const handleFileChange = async (e, setter, name, setSize) => {
+    const file = e.target.files[0]
+    if (file) {
+      const originalSize = Math.round(file.size / 1024)
+      const compressed = await handleCompressImage(file)
+      const compressedSize = Math.round(compressed.size / 1024)
+
+      setter(compressed)
+      setSize({ original: originalSize, compressed: compressedSize })
+
+      handleInputChange({
+        target: { name, value: compressed }
+      })
+    }
+  }
 
   return (
     <div>
@@ -25,7 +77,7 @@ export const DatosPersonalesForm = ({
       <TextInput
         name='nombre'
         placeholder='Nombre'
-        className={`mb-3 ${formData.nombre ? 'text-blue-500' : ''}`}
+        className='mb-3'
         value={formData.nombre || ''}
         onChange={handleInputChange}
         disabled
@@ -34,7 +86,7 @@ export const DatosPersonalesForm = ({
       <TextInput
         name='apellido'
         placeholder='Apellido'
-        className={`mb-3 ${formData.apellido ? 'text-blue-500' : ''}`}
+        className='mb-3'
         value={formData.apellido || ''}
         onChange={handleInputChange}
         disabled
@@ -44,7 +96,7 @@ export const DatosPersonalesForm = ({
         name='email'
         placeholder='Correo Electrónico'
         type='email'
-        className={`mb-3 ${formData.email ? 'text-blue-500' : ''}`}
+        className='mb-3'
         value={formData.email || ''}
         onChange={handleInputChange}
         disabled={shouldDisableFields}
@@ -54,7 +106,7 @@ export const DatosPersonalesForm = ({
         name='telefono'
         placeholder='Teléfono'
         type='tel'
-        className={`mb-3 ${formData.telefono ? 'text-blue-500' : ''}`}
+        className='mb-3'
         value={formData.telefono || ''}
         onChange={(e) => {
           const value = e.target.value.replace(/\D/g, '')
@@ -63,35 +115,27 @@ export const DatosPersonalesForm = ({
         disabled={shouldDisableFields}
       />
 
-      <div>
-        <div className='mb-2 block'>
-          <Label className='text-xl text-green-500' htmlFor='file-upload' value='Foto del frente del DNI' />
-        </div>
-        <FileInput
+      <Card className=' shadow-sm mt-4'>
+        <FotoDniInput
+          label='Frente del DNI'
+          // name='foto_dni_frente'
           name='foto_dni'
-          placeholder='DNI del Titular'
-          type='file'
-          className='mb-3'
-          onChange={async (e) => {
-            const file = e.target.files[0]
-            if (file) {
-              const compressed = await handleCompressImage(file)
-              setDniImage(compressed)
-              handleInputChange({
-                target: { name: 'foto_dni', value: compressed }
-              })
-            }
-          }}
-          accept='image/*'
-          capture='environment'
-          disabled={loadingDNI}
+          value={dniImageFrente}
+          loading={loadingDNI}
+          // onChange={(e) => handleFileChange(e, setDniImageFrente, 'foto_dni_frente', setDniFrenteSize)}
+          onChange={(e) => handleFileChange(e, setDniImageFrente, 'foto_dni', setDniFrenteSize)}
+          fileSize={dniFrenteSize}
         />
-        {loadingDNI && (
-          <div className='mb-3 text-sm text-gray-500 flex items-center gap-2'>
-            <Spinner /> Subiendo Archivo...
-          </div>
-        )}
-      </div>
+
+        <FotoDniInput
+          label='Dorso del DNI'
+          name='foto_dni_dorso'
+          value={dniImageDorso}
+          loading={loadingDNI}
+          onChange={(e) => handleFileChange(e, setDniImageDorso, 'foto_dni_dorso', setDniDorsoSize)}
+          fileSize={dniDorsoSize}
+        />
+      </Card>
     </div>
   )
 }

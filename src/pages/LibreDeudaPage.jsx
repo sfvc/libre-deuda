@@ -25,8 +25,10 @@ export default function LibreDeudaPage () {
   const [disableMarca, setDisableMarca] = useState(true)
   const [disableModelo, setDisableModelo] = useState(true)
   const [disableTipo, setDisableTipo] = useState(true)
-  const [dniImage, setDniImage] = useState(null)
-  const [cedulaImage, setCedulaImage] = useState(null)
+  const [dniImageFrente, setDniImageFrente] = useState(null)
+  const [dniImageDorso, setDniImageDorso] = useState(null)
+  const [cedulaImageFrente, setCedulaImageFrente] = useState(null)
+  const [cedulaImageDorso, setCedulaImageDorso] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [formData, setFormData] = useState({
@@ -148,7 +150,8 @@ export default function LibreDeudaPage () {
       Apellido: formData.apellido,
       'Correo Electrónico': formData.email,
       Teléfono: formData.telefono,
-      'Imagen del DNI': dniImage
+      'Frente del DNI': dniImageFrente,
+      'Dorso del DNI': dniImageDorso
     }
 
     if (modoConsulta === 'completo') {
@@ -157,7 +160,8 @@ export default function LibreDeudaPage () {
         Marca: validateMarca(),
         Modelo: validateModelo(),
         'Tipo de vehículo': validateTipo(),
-        'Imagen de la Cédula': cedulaImage
+        'Frente de la Cédula': cedulaImageFrente,
+        'Dorso de la Cédula': cedulaImageDorso
       })
     }
 
@@ -232,8 +236,11 @@ export default function LibreDeudaPage () {
       }
     })
 
-    if (dniImage instanceof File) dataToSend.append('foto_dni', dniImage)
-    if (cedulaImage instanceof File) dataToSend.append('foto_cedula', cedulaImage)
+    // if (dniImageFrente instanceof File) dataToSend.append('foto_dni_frente', dniImageFrente)
+    if (dniImageFrente instanceof File) dataToSend.append('foto_dni', dniImageFrente)
+    if (dniImageDorso instanceof File) dataToSend.append('foto_dni_dorso', dniImageDorso)
+    if (cedulaImageFrente instanceof File) dataToSend.append('foto_cedula_frente', cedulaImageFrente)
+    if (cedulaImageDorso instanceof File) dataToSend.append('foto_cedula_dorso', cedulaImageDorso)
     if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
 
     try {
@@ -280,8 +287,10 @@ export default function LibreDeudaPage () {
       tipo_id: '',
       numero_taxi_remis: ''
     })
-    setDniImage(null)
-    setCedulaImage(null)
+    setDniImageFrente(null)
+    setDniImageDorso(null)
+    setCedulaImageFrente(null)
+    setCedulaImageDorso(null)
     setMarbeteImage(null)
   }
 
@@ -298,7 +307,8 @@ export default function LibreDeudaPage () {
         tipo_id: '',
         numero_taxi_remis: ''
       }))
-      setCedulaImage(null)
+      setCedulaImageFrente(null)
+      setCedulaImageDorso(null)
       setMarbeteImage(null)
       setDisableMarca(true)
       setDisableModelo(true)
@@ -345,10 +355,12 @@ export default function LibreDeudaPage () {
                     <DatosPersonalesForm
                       formData={formData}
                       handleInputChange={handleInputChange}
-                      handlePersonaSelect={handlePersonaSelect}
                       shouldDisableFields={shouldDisableFields}
-                      dniImage={dniImage}
-                      setDniImage={setDniImage}
+                      handlePersonaSelect={handlePersonaSelect}
+                      dniImageFrente={dniImageFrente}
+                      setDniImageFrente={setDniImageFrente}
+                      dniImageDorso={dniImageDorso}
+                      setDniImageDorso={setDniImageDorso}
                       modoConsulta={modoConsulta}
                     />
 
@@ -360,9 +372,11 @@ export default function LibreDeudaPage () {
                         disableMarca={disableMarca}
                         disableModelo={disableModelo}
                         disableTipo={disableTipo}
-                        cedulaImage={cedulaImage}
+                        cedulaImageFrente={cedulaImageFrente}
+                        setCedulaImageFrente={setCedulaImageFrente}
+                        cedulaImageDorso={cedulaImageDorso}
+                        setCedulaImageDorso={setCedulaImageDorso}
                         marbeteImage={marbeteImage}
-                        setCedulaImage={setCedulaImage}
                         setMarbeteImage={setMarbeteImage}
                         tipos={tipos || []}
                         isLoadingTipos={isLoadingTipos}
@@ -371,7 +385,7 @@ export default function LibreDeudaPage () {
                     )}
 
                     {errorMessage && (
-                      <Alert color='failure' className='mb-4'>
+                      <Alert color='failure' className='mb-4 mt-4'>
                         <p className='font-semibold text-red-700'>Por favor, completa los siguientes campos faltantes:</p>
                         <pre className='whitespace-pre-wrap text-red-600'>{errorMessage}</pre>
                       </Alert>

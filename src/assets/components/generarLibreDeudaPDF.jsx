@@ -25,10 +25,9 @@ const convertirImagenABase64 = (ruta) => {
 
 export const generarLibreDeudaPDF = async (data) => {
   const hoy = new Date()
-  const fechaActual = hoy.toLocaleDateString()
   const horaActual = hoy.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
   const fechaDB = new Date().toISOString().split('T')[0]
-  const fechaValidez = new Date(new Date().setMonth(hoy.getMonth() + 2))
+  const fechaValidez = new Date(new Date().setMonth(hoy.getMonth() + 6))
   const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo
 
   const qrUrl = data.urlParaQR || `https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data.infractorDocumento}_${fechaDB}.pdf`
@@ -68,7 +67,7 @@ export const generarLibreDeudaPDF = async (data) => {
       </div>
 
       ${tieneDatosVehiculo
-        ? `
+      ? `
           <div class="section-title">Datos del Automotor</div>
           <table class="info-table">
             <tr>
@@ -84,24 +83,27 @@ export const generarLibreDeudaPDF = async (data) => {
             </tr>
           </table>
         `
-        : `
+      : `
           <table class="info-table">
             <tr>
               <th>Persona</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
             </tr>
           </table>
         `
-      }
+    }
 
       <div class="content-box">
-        El funcionario actuante <span class="bold">CERTIFICA</span> que, conforme a los registros del Juzgado Municipal de Faltas, el ciudadano mencionado no presenta deudas pendientes al día de la fecha.
+        <span class="bold">CERTIFICO</span> que, conforme a los registros del Juzgado Municipal de Faltas, ${tieneDatosVehiculo
+            ? 'el vehículo mencionado no presenta deudas pendientes al día de la fecha.'
+            : 'el ciudadano mencionado no presenta deudas pendientes al día de la fecha.'
+          }
 
         <br /><br />
         El presente certificado de <span class="bold">LIBRE DEUDA</span> se emite a solicitud del interesado, a los fines que estime corresponder.
 
         <br /><br />
         Vigencia hasta el día: <span class="bold">${formatDate(fechaValidez)}</span><br/>
-        San Fernando del Valle de Catamarca, a horas <span class="bold">${horaActual}</span> del día <span class="bold">${formatDate(fechaActual)}</span>.
+        San Fernando del Valle de Catamarca, a horas <span class="bold">${horaActual}</span> del día <span class="bold">${formatDate(hoy)}</span>.
       </div>
 
       <div class="qr-container">
