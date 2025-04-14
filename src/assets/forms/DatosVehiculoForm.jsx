@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { FileInput, Label, Select, TextInput, Spinner, Card } from 'flowbite-react'
 import { useImageCompression } from '@/assets/components/useImageCompression'
 import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '@/assets/components/SearchMarca'
 
-const FotoDocumentoInput = ({ label, name, value, loading, onChange, fileSize }) => (
+const FotoDocumentoInput = ({ label, name, value, loading, onChange }) => (
   <div className='mb-4'>
     <Label className='text-sm font-medium text-gray-700 mb-1 block'>{label}</Label>
     {value && (
@@ -27,12 +27,6 @@ const FotoDocumentoInput = ({ label, name, value, loading, onChange, fileSize })
         <Spinner size='sm' /> Subiendo archivo...
       </div>
     )}
-    {fileSize?.original && fileSize?.compressed && !loading && (
-      <p className='text-sm text-gray-600 mt-1'>
-        Peso original: {fileSize.original} KB <br />
-        Peso comprimido: {fileSize.compressed} KB
-      </p>
-    )}
   </div>
 )
 
@@ -54,22 +48,20 @@ export const DatosVehiculoForm = ({
   errorTipos
 }) => {
   const { isLoading: loadingCedula, loadingMarbete, handleCompressImage } = useImageCompression()
-  const [cedulaFrenteSize, setCedulaFrenteSize] = useState({ original: null, compressed: null })
-  const [cedulaDorsoSize, setCedulaDorsoSize] = useState({ original: null, compressed: null })
-  const [marbeteSize, setMarbeteSize] = useState({ original: null, compressed: null })
 
   const handleFileChange = async (e, setter, name, setSize) => {
     const file = e.target.files[0]
     if (file) {
-      const originalSize = Math.round(file.size / 1024)
       const compressed = await handleCompressImage(file)
-      const compressedSize = Math.round(compressed.size / 1024)
+      const compressedFile = new File([compressed], file.name, {
+        type: compressed.type || file.type,
+        lastModified: Date.now()
+      })
 
-      setter(compressed)
-      setSize({ original: originalSize, compressed: compressedSize })
+      setter(compressedFile)
 
       handleInputChange({
-        target: { name, value: compressed }
+        target: { name, value: compressedFile }
       })
     }
   }
@@ -157,8 +149,7 @@ export const DatosVehiculoForm = ({
               name='foto_marbete'
               value={marbeteImage}
               loading={loadingMarbete}
-              onChange={(e) => handleFileChange(e, setMarbeteImage, 'foto_marbete', setMarbeteSize)}
-              fileSize={marbeteSize}
+              onChange={(e) => handleFileChange(e, setMarbeteImage, 'foto_marbete')}
             />
           </Card>
         </>
@@ -170,8 +161,7 @@ export const DatosVehiculoForm = ({
           name='foto_cedula_frente'
           value={cedulaImageFrente}
           loading={loadingCedula}
-          onChange={(e) => handleFileChange(e, setCedulaImageFrente, 'foto_cedula_frente', setCedulaFrenteSize)}
-          fileSize={cedulaFrenteSize}
+          onChange={(e) => handleFileChange(e, setCedulaImageFrente, 'foto_cedula_frente')}
         />
 
         <FotoDocumentoInput
@@ -179,8 +169,7 @@ export const DatosVehiculoForm = ({
           name='foto_cedula_dorso'
           value={cedulaImageDorso}
           loading={loadingCedula}
-          onChange={(e) => handleFileChange(e, setCedulaImageDorso, 'foto_cedula_dorso', setCedulaDorsoSize)}
-          fileSize={cedulaDorsoSize}
+          onChange={(e) => handleFileChange(e, setCedulaImageDorso, 'foto_cedula_dorso')}
         />
       </Card>
     </>

@@ -6,7 +6,7 @@ export const convertHtmlToPdf = async (htmlContent) => {
   formData.append('files', htmlBlob, 'index.html')
   formData.append('index.html', 'index.html')
 
-  const response = await fetch('https://demo.gotenberg.dev/forms/chromium/convert/html', {
+  const response = await fetch('https://apis.v1.cc.gob.ar/gotenberg/forms/chromium/convert/html', {
     method: 'POST',
     body: formData
   })
