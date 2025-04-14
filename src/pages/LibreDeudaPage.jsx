@@ -215,8 +215,8 @@ export default function LibreDeudaPage () {
       libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
+      // eslint-disable-next-line no-unused-vars
       const response = await postLibreDeuda(libreDeudaFormData)
-      console.log('Libre deuda generado y enviado correctamente:', response)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')

@@ -99,7 +99,7 @@ export const generarLibreDeudaPDF = async (data) => {
           }
 
         <br /><br />
-        El presente certificado de <span class="bold">LIBRE DEUDA</span> se emite a solicitud del interesado, a los fines que estime corresponder.
+        El presente certificado de <span class="bold">LIBRE DEUDA</span> se emite a solicitud del interesado.
 
         <br /><br />
         Vigencia hasta el día: <span class="bold">${formatDate(fechaValidez)}</span><br/>
