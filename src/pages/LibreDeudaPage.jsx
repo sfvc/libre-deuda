@@ -26,9 +26,6 @@ export default function LibreDeudaPage () {
   const [disableModelo, setDisableModelo] = useState(true)
   const [disableTipo, setDisableTipo] = useState(true)
   const [dniImageFrente, setDniImageFrente] = useState(null)
-  const [dniImageDorso, setDniImageDorso] = useState(null)
-  const [cedulaImageFrente, setCedulaImageFrente] = useState(null)
-  const [cedulaImageDorso, setCedulaImageDorso] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [formData, setFormData] = useState({
@@ -150,8 +147,7 @@ export default function LibreDeudaPage () {
       Apellido: formData.apellido,
       'Correo Electrónico': formData.email,
       Teléfono: formData.telefono,
-      'Frente del DNI': dniImageFrente,
-      'Dorso del DNI': dniImageDorso
+      'Frente del DNI': dniImageFrente
     }
 
     if (modoConsulta === 'completo') {
@@ -159,9 +155,7 @@ export default function LibreDeudaPage () {
         Dominio: formData.dominio,
         Marca: validateMarca(),
         Modelo: validateModelo(),
-        'Tipo de vehículo': validateTipo(),
-        'Frente de la Cédula': cedulaImageFrente,
-        'Dorso de la Cédula': cedulaImageDorso
+        'Tipo de vehículo': validateTipo()
       })
     }
 
@@ -238,9 +232,6 @@ export default function LibreDeudaPage () {
 
     // if (dniImageFrente instanceof File) dataToSend.append('foto_dni_frente', dniImageFrente)
     if (dniImageFrente instanceof File) dataToSend.append('foto_dni', dniImageFrente)
-    if (dniImageDorso instanceof File) dataToSend.append('foto_dni_dorso', dniImageDorso)
-    if (cedulaImageFrente instanceof File) dataToSend.append('foto_cedula_frente', cedulaImageFrente)
-    if (cedulaImageDorso instanceof File) dataToSend.append('foto_cedula_dorso', cedulaImageDorso)
     if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
 
     try {
@@ -288,9 +279,6 @@ export default function LibreDeudaPage () {
       numero_taxi_remis: ''
     })
     setDniImageFrente(null)
-    setDniImageDorso(null)
-    setCedulaImageFrente(null)
-    setCedulaImageDorso(null)
     setMarbeteImage(null)
   }
 
@@ -307,8 +295,6 @@ export default function LibreDeudaPage () {
         tipo_id: '',
         numero_taxi_remis: ''
       }))
-      setCedulaImageFrente(null)
-      setCedulaImageDorso(null)
       setMarbeteImage(null)
       setDisableMarca(true)
       setDisableModelo(true)
@@ -359,8 +345,6 @@ export default function LibreDeudaPage () {
                       handlePersonaSelect={handlePersonaSelect}
                       dniImageFrente={dniImageFrente}
                       setDniImageFrente={setDniImageFrente}
-                      dniImageDorso={dniImageDorso}
-                      setDniImageDorso={setDniImageDorso}
                       modoConsulta={modoConsulta}
                     />
 
@@ -372,10 +356,6 @@ export default function LibreDeudaPage () {
                         disableMarca={disableMarca}
                         disableModelo={disableModelo}
                         disableTipo={disableTipo}
-                        cedulaImageFrente={cedulaImageFrente}
-                        setCedulaImageFrente={setCedulaImageFrente}
-                        cedulaImageDorso={cedulaImageDorso}
-                        setCedulaImageDorso={setCedulaImageDorso}
                         marbeteImage={marbeteImage}
                         setMarbeteImage={setMarbeteImage}
                         tipos={tipos || []}

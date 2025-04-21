@@ -37,17 +37,13 @@ export const DatosVehiculoForm = ({
   disableMarca,
   disableModelo,
   disableTipo,
-  cedulaImageFrente,
-  cedulaImageDorso,
   marbeteImage,
-  setCedulaImageFrente,
-  setCedulaImageDorso,
   setMarbeteImage,
   tipos,
   isLoadingTipos,
   errorTipos
 }) => {
-  const { isLoading: loadingCedula, loadingMarbete, handleCompressImage } = useImageCompression()
+  const { isLoading: loadingMarbete, handleCompressImage } = useImageCompression()
 
   const handleFileChange = async (e, setter, name) => {
     const file = e.target.files[0]
@@ -143,7 +139,6 @@ export const DatosVehiculoForm = ({
           />
 
           <Card className='p-4 shadow-sm mb-4'>
-            <h5 className='text-lg font-semibold text-gray-700 mb-2'>Foto del Marbete</h5>
             <FotoDocumentoInput
               label='Marbete del Vehículo'
               name='foto_marbete'
@@ -154,24 +149,6 @@ export const DatosVehiculoForm = ({
           </Card>
         </>
       )}
-
-      <Card className='shadow-sm'>
-        <FotoDocumentoInput
-          label='Frente de la Cédula del Titular'
-          name='foto_cedula_frente'
-          value={cedulaImageFrente}
-          loading={loadingCedula}
-          onChange={(e) => handleFileChange(e, setCedulaImageFrente, 'foto_cedula_frente')}
-        />
-
-        <FotoDocumentoInput
-          label='Dorso de la Cédula del Titular'
-          name='foto_cedula_dorso'
-          value={cedulaImageDorso}
-          loading={loadingCedula}
-          onChange={(e) => handleFileChange(e, setCedulaImageDorso, 'foto_cedula_dorso')}
-        />
-      </Card>
     </>
   )
 }

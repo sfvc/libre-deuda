@@ -36,8 +36,6 @@ export const DatosPersonalesForm = ({
   shouldDisableFields,
   dniImageFrente,
   setDniImageFrente,
-  dniImageDorso,
-  setDniImageDorso,
   modoConsulta = 'simple'
 }) => {
   const { isLoading: loadingDNI, handleCompressImage } = useImageCompression()
@@ -117,14 +115,6 @@ export const DatosPersonalesForm = ({
           loading={loadingDNI}
           // onChange={(e) => handleFileChange(e, setDniImageFrente, 'foto_dni_frente')}
           onChange={(e) => handleFileChange(e, setDniImageFrente, 'foto_dni')}
-        />
-
-        <FotoDniInput
-          label='Dorso del DNI'
-          name='foto_dni_dorso'
-          value={dniImageDorso}
-          loading={loadingDNI}
-          onChange={(e) => handleFileChange(e, setDniImageDorso, 'foto_dni_dorso')}
         />
       </Card>
     </div>
