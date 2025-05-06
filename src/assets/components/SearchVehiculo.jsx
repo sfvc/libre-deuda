@@ -43,7 +43,9 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
     if (onSelectVehiculo) {
       onSelectVehiculo({
         vehiculo_id: veh?.id,
+        id: veh?.id,
         dominio: veh?.dominio,
+        titular: veh?.titular,
         marca: veh?.marca || '',
         marca_id: veh?.marca?.id || '',
         modelo: veh?.modelo || '',

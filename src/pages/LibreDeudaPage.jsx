@@ -14,6 +14,7 @@ import Loading from '@/Loading'
 
 export default function LibreDeudaPage () {
   const [modoConsulta, setModoConsulta] = useState('simple')
+  const [showPersonaForm, setShowPersonaForm] = useState(modoConsulta === 'simple')
   const [errorMessage, setErrorMessage] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
@@ -26,6 +27,8 @@ export default function LibreDeudaPage () {
   const [disableModelo, setDisableModelo] = useState(true)
   const [disableTipo, setDisableTipo] = useState(true)
   const [dniImageFrente, setDniImageFrente] = useState(null)
+  const [cedulaImageFrente, setCedulaImageFrente] = useState(null)
+  const [cedulaImageDorso, setCedulaImageDorso] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [formData, setFormData] = useState({
@@ -104,23 +107,54 @@ export default function LibreDeudaPage () {
   }
 
   const handleVehiculoSelect = (vehiculo) => {
-    setFilters((prev) => ({ ...prev, vehiculo_id: vehiculo?.vehiculo_id || vehiculo?.id || '' }))
-
-    setFormData((prev) => ({
+    const id = vehiculo.vehiculo_id
+    setFilters(prev => ({
       ...prev,
-      vehiculo_id: vehiculo?.vehiculo_id || vehiculo?.id || null,
-      dominio: vehiculo?.dominio || prev.dominio || null,
-      marca: vehiculo?.marca?.nombre || prev.marca || null,
-      marca_id: vehiculo?.marca?.id || prev.marca_id || null,
-      modelo: vehiculo?.modelo || prev.modelo || null,
-      tipo: vehiculo?.tipo?.nombre || prev.tipo || null,
-      tipo_id: vehiculo?.tipo?.id || prev.tipo_id || null,
-      numero_taxi_remis: vehiculo?.numero_taxi_remis || prev.numero_taxi_remis || null
+      vehiculo_id: id,
+      persona_id: vehiculo.titular?.id || ''
     }))
-
+    setFormData(prev => ({
+      ...prev,
+      vehiculo_id: vehiculo.id,
+      dominio: vehiculo.dominio,
+      marca: vehiculo.marca?.nombre || '',
+      marca_id: vehiculo.marca?.id || '',
+      modelo: vehiculo.modelo,
+      tipo: vehiculo.tipo?.nombre || '',
+      tipo_id: vehiculo.tipo?.id || '',
+      numero_taxi_remis: vehiculo.numero_taxi_remis || ''
+    }))
     setDisableMarca(false)
     setDisableModelo(false)
     setDisableTipo(false)
+
+    if (modoConsulta === 'completo') {
+      setShowPersonaForm(true)
+
+      if (vehiculo.titular) {
+        setFormData(prev => ({
+          ...prev,
+          persona_id: vehiculo.titular.id,
+          nombre: vehiculo.titular.nombre,
+          apellido: vehiculo.titular.apellido,
+          email: vehiculo.titular.email || '',
+          telefono: vehiculo.titular.telefono || '',
+          dni: vehiculo?.titular.numero_documento || vehiculo?.titular.documento || ''
+        }))
+        setShouldDisableFields(true)
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          persona_id: null,
+          nombre: '',
+          apellido: '',
+          email: '',
+          telefono: '',
+          dni: ''
+        }))
+        setShouldDisableFields(false)
+      }
+    }
   }
 
   const handleMultasPagadas = () => {
@@ -181,36 +215,46 @@ export default function LibreDeudaPage () {
   const handleGenerateLibreDeuda = async () => {
     setIsGeneratingPdf(true)
     try {
+      const vehId = formData.vehiculo_id || filters.vehiculo_id
       const acta = {
         infractores: [{
           nombre: formData.nombre,
           apellido: formData.apellido,
           documento: formData.dni || formData.infractorDocumento
         }],
-        vehiculo: formData.vehiculo_id
+        vehiculo: vehId
           ? {
+              id: vehId,
               dominio: formData.dominio,
-              marca: formData.marca,
+              marca: { nombre: formData.marca },
               modelo: formData.modelo,
-              tipo: formData.tipo,
+              tipo: { nombre: formData.tipo },
               numero_taxi_remis: formData.numero_taxi_remis
             }
           : null
       }
+      console.log('actita', acta)
 
       const formattedData = await formatearData(acta)
       formattedData.persona_id = formData.persona_id
       formattedData.libreDeudaID = Date.now()
+      formattedData.vehiculo = acta.vehiculo
+      if (formattedData.vehiculo) {
+        formattedData.marca = formattedData.vehiculo.marca.nombre
+        formattedData.tipo = formattedData.vehiculo.tipo.nombre
+        formattedData.patente = formattedData.vehiculo.dominio
+      }
       const { pdfBlob, fileName } = await generarLibreDeudaPDF(formattedData)
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' })
+      console.log('chau', formattedData)
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
-      libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
+      libreDeudaFormData.append('vehiculo_id', formData.vehId)
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
-      // eslint-disable-next-line no-unused-vars
-      const response = await postLibreDeuda(libreDeudaFormData)
+      await postLibreDeuda(libreDeudaFormData)
+      console.log('hola', libreDeudaFormData)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')
@@ -295,6 +339,9 @@ export default function LibreDeudaPage () {
         tipo_id: '',
         numero_taxi_remis: ''
       }))
+      setCedulaImageFrente(null)
+      setCedulaImageDorso(null)
+      setMarbeteImage(null)
       setMarbeteImage(null)
       setDisableMarca(true)
       setDisableModelo(true)
@@ -303,6 +350,15 @@ export default function LibreDeudaPage () {
         ...prev,
         vehiculo_id: ''
       }))
+    }
+  }, [modoConsulta])
+
+  useEffect(() => {
+    if (modoConsulta === 'simple') {
+      setShowPersonaForm(true)
+    } else {
+      // en "completo" arrancamos oculto
+      setShowPersonaForm(false)
     }
   }, [modoConsulta])
 
@@ -338,15 +394,17 @@ export default function LibreDeudaPage () {
                       Si el email o teléfono no está completado al buscar, por favor, completalo para verificarlo correctamente.
                     </p>
 
-                    <DatosPersonalesForm
-                      formData={formData}
-                      handleInputChange={handleInputChange}
-                      shouldDisableFields={shouldDisableFields}
-                      handlePersonaSelect={handlePersonaSelect}
-                      dniImageFrente={dniImageFrente}
-                      setDniImageFrente={setDniImageFrente}
-                      modoConsulta={modoConsulta}
-                    />
+                    {showPersonaForm && (
+                      <DatosPersonalesForm
+                        formData={formData}
+                        handleInputChange={handleInputChange}
+                        shouldDisableFields={shouldDisableFields}
+                        handlePersonaSelect={handlePersonaSelect}
+                        dniImageFrente={dniImageFrente}
+                        setDniImageFrente={setDniImageFrente}
+                        modoConsulta={modoConsulta}
+                      />
+                    )}
 
                     {modoConsulta === 'completo' && (
                       <DatosVehiculoForm
@@ -356,6 +414,10 @@ export default function LibreDeudaPage () {
                         disableMarca={disableMarca}
                         disableModelo={disableModelo}
                         disableTipo={disableTipo}
+                        cedulaImageFrente={cedulaImageFrente}
+                        setCedulaImageFrente={setCedulaImageFrente}
+                        cedulaImageDorso={cedulaImageDorso}
+                        setCedulaImageDorso={setCedulaImageDorso}
                         marbeteImage={marbeteImage}
                         setMarbeteImage={setMarbeteImage}
                         tipos={tipos || []}

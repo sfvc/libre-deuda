@@ -121,10 +121,32 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                     ))
                   )
                 : (
-                  <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
-                    <p>No se encontró a la persona.</p>
-                    <p className='text-sm text-gray-500'>Por favor, acércate al Juzgado de Faltas Municipal, Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM ante cualquier duda.</p>
+                  <li className='hover:bg-slate-300 border-b-2 border-x px-2'>
+                    <button
+                      type='button'
+                      className='w-full text-start py-2'
+                      onClick={() => {
+                        setShow(false)
+                        if (onSelectPersona) {
+                          onSelectPersona({
+                            persona_id: 639757,
+                            nombre: 'ㅤ',
+                            apellido: 'ㅤ',
+                            dni: search,
+                            cuit: 'SIN DATOS',
+                            razon_social: 'SIN DATOS',
+                            domicilio: 'SIN DATOS'
+                          })
+                        }
+                      }}
+                    >
+                      <strong>No se encontró a la persona.</strong><br />
+                      <span className='text-sm text-gray-500'>
+                        Click aquí para cargar con datos vacíos.
+                      </span>
+                    </button>
                   </li>
+
                   )}
           </ul>
         )}
