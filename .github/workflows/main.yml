@@ -26,6 +26,10 @@ jobs:
                 docker rm libre_deuda_front -f
                 docker rmi municipalidad/libre_deuda_front:latest -f
                 docker build --no-cache --pull --build-arg VITE_API_URL="${{ secrets.VITE_API_URL}}" --build-arg  VITE_X_API_TOKEN="${{ secrets.VITE_X_API_TOKEN }}"   -t  municipalidad/libre_deuda_front:latest .                     
-                docker run --restart=always -d -p 0.0.0.0:7025:80 --name libre_deuda_front municipalidad/libre_deuda_front:latest
+                docker run -d \
+                  --name libre_deuda_front \
+                  --restart=always \
+                  -p 7025:80 \
+                  municipalidad/libre_deuda_front:latest
                 docker image prune -f
                 exit
