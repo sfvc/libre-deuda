@@ -47,7 +47,7 @@ export const DatosVehiculoForm = ({
   isLoadingTipos,
   errorTipos
 }) => {
-  const { isLoading: loadingCedula, loadingMarbete, handleCompressImage } = useImageCompression()
+  const { isLoading: loadingCedulaFrente, loadingCedulaDorso, loadingMarbete, handleCompressImage } = useImageCompression()
 
   const handleFileChange = async (e, setter, name) => {
     const file = e.target.files[0]
@@ -159,7 +159,7 @@ export const DatosVehiculoForm = ({
           label='Frente de la Cédula del Titular'
           name='foto_cedula_frente'
           value={cedulaImageFrente}
-          loading={loadingCedula}
+          loading={loadingCedulaFrente}
           onChange={(e) => handleFileChange(e, setCedulaImageFrente, 'foto_cedula_frente')}
         />
 
@@ -167,7 +167,7 @@ export const DatosVehiculoForm = ({
           label='Dorso de la Cédula del Titular'
           name='foto_cedula_dorso'
           value={cedulaImageDorso}
-          loading={loadingCedula}
+          loading={loadingCedulaDorso}
           onChange={(e) => handleFileChange(e, setCedulaImageDorso, 'foto_cedula_dorso')}
         />
       </Card>

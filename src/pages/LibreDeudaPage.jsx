@@ -26,7 +26,6 @@ export default function LibreDeudaPage () {
   const [disableMarca, setDisableMarca] = useState(true)
   const [disableModelo, setDisableModelo] = useState(true)
   const [disableTipo, setDisableTipo] = useState(true)
-  const [dniImageFrente, setDniImageFrente] = useState(null)
   const [cedulaImageFrente, setCedulaImageFrente] = useState(null)
   const [cedulaImageDorso, setCedulaImageDorso] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
@@ -180,8 +179,8 @@ export default function LibreDeudaPage () {
       Nombre: formData.nombre,
       Apellido: formData.apellido,
       'Correo Electrónico': formData.email,
-      Teléfono: formData.telefono,
-      'Frente del DNI': dniImageFrente
+      Teléfono: formData.telefono
+
     }
 
     if (modoConsulta === 'completo') {
@@ -189,7 +188,9 @@ export default function LibreDeudaPage () {
         Dominio: formData.dominio,
         Marca: validateMarca(),
         Modelo: validateModelo(),
-        'Tipo de vehículo': validateTipo()
+        'Tipo de vehículo': validateTipo(),
+        'Frente de la cédula': cedulaImageFrente,
+        'Dorso de la cédula': cedulaImageDorso
       })
     }
 
@@ -233,7 +234,6 @@ export default function LibreDeudaPage () {
             }
           : null
       }
-      console.log('actita', acta)
 
       const formattedData = await formatearData(acta)
       formattedData.persona_id = formData.persona_id
@@ -246,7 +246,6 @@ export default function LibreDeudaPage () {
       }
       const { pdfBlob, fileName } = await generarLibreDeudaPDF(formattedData)
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' })
-      console.log('chau', formattedData)
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
@@ -254,7 +253,6 @@ export default function LibreDeudaPage () {
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
       await postLibreDeuda(libreDeudaFormData)
-      console.log('hola', libreDeudaFormData)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')
@@ -274,9 +272,9 @@ export default function LibreDeudaPage () {
       }
     })
 
-    // if (dniImageFrente instanceof File) dataToSend.append('foto_dni_frente', dniImageFrente)
-    if (dniImageFrente instanceof File) dataToSend.append('foto_dni', dniImageFrente)
     if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
+    if (cedulaImageFrente instanceof File) dataToSend.append('foto_cedula_frente', cedulaImageFrente)
+    if (cedulaImageDorso instanceof File) dataToSend.append('foto_cedula_dorso', cedulaImageDorso)
 
     try {
       await postPersonaDatos(dataToSend)
@@ -322,8 +320,10 @@ export default function LibreDeudaPage () {
       tipo_id: '',
       numero_taxi_remis: ''
     })
-    setDniImageFrente(null)
     setMarbeteImage(null)
+    setCedulaImageFrente(null)
+    setCedulaImageDorso(null)
+    setModoConsulta('simple')
   }
 
   useEffect(() => {
@@ -346,6 +346,7 @@ export default function LibreDeudaPage () {
       setDisableMarca(true)
       setDisableModelo(true)
       setDisableTipo(true)
+      setModoConsulta('simple')
       setFilters((prev) => ({
         ...prev,
         vehiculo_id: ''
@@ -357,7 +358,6 @@ export default function LibreDeudaPage () {
     if (modoConsulta === 'simple') {
       setShowPersonaForm(true)
     } else {
-      // en "completo" arrancamos oculto
       setShowPersonaForm(false)
     }
   }, [modoConsulta])
@@ -400,8 +400,6 @@ export default function LibreDeudaPage () {
                         handleInputChange={handleInputChange}
                         shouldDisableFields={shouldDisableFields}
                         handlePersonaSelect={handlePersonaSelect}
-                        dniImageFrente={dniImageFrente}
-                        setDniImageFrente={setDniImageFrente}
                         modoConsulta={modoConsulta}
                       />
                     )}
