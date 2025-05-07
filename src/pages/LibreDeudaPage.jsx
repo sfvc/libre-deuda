@@ -30,6 +30,7 @@ export default function LibreDeudaPage () {
   const [cedulaImageDorso, setCedulaImageDorso] = useState(null)
   const [marbeteImage, setMarbeteImage] = useState(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [showTitularAlert, setShowTitularAlert] = useState(false)
   const [formData, setFormData] = useState({
     persona_id: null,
     nombre: null,
@@ -141,6 +142,7 @@ export default function LibreDeudaPage () {
           dni: vehiculo?.titular.numero_documento || vehiculo?.titular.documento || ''
         }))
         setShouldDisableFields(true)
+        setShowTitularAlert(false)
       } else {
         setFormData(prev => ({
           ...prev,
@@ -152,6 +154,7 @@ export default function LibreDeudaPage () {
           dni: ''
         }))
         setShouldDisableFields(false)
+        setShowTitularAlert(true)
       }
     }
   }
@@ -323,6 +326,7 @@ export default function LibreDeudaPage () {
     setMarbeteImage(null)
     setCedulaImageFrente(null)
     setCedulaImageDorso(null)
+    setShowTitularAlert(false)
     setModoConsulta('simple')
   }
 
@@ -342,11 +346,11 @@ export default function LibreDeudaPage () {
       setCedulaImageFrente(null)
       setCedulaImageDorso(null)
       setMarbeteImage(null)
-      setMarbeteImage(null)
       setDisableMarca(true)
       setDisableModelo(true)
       setDisableTipo(true)
       setModoConsulta('simple')
+      setShowTitularAlert(false)
       setFilters((prev) => ({
         ...prev,
         vehiculo_id: ''
@@ -393,6 +397,12 @@ export default function LibreDeudaPage () {
                     <p className='text-black mb-4'>
                       Si el email o teléfono no está completado al buscar, por favor, completalo para verificarlo correctamente.
                     </p>
+
+                    {showTitularAlert && (
+                      <Alert color='warning' className='mb-4'>
+                        El vehículo no tiene titular asociado. Por favor completá los datos ingresando el DNI del mismo.
+                      </Alert>
+                    )}
 
                     {showPersonaForm && (
                       <DatosPersonalesForm
