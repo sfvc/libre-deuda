@@ -112,7 +112,8 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                   )
                 : (
                   <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
-                    No se encontró el vehículo.
+                    <p>No se encontró el vehículo.</p>
+                    <p><p className='text-sm text-gray-500'>Por favor, acércate al Juzgado de Faltas Municipal, Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM ante cualquier duda.</p></p>
                   </li>
                   )}
           </ul>

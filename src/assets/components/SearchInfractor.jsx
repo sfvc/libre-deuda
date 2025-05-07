@@ -70,6 +70,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
         <TextInput
           name='search'
           type='text'
+          maxLength={8}
           placeholder='DNI'
           value={search}
           onChange={handleSearchChange}
@@ -132,6 +133,8 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                             persona_id: 639757,
                             nombre: 'ㅤ',
                             apellido: 'ㅤ',
+                            email: 'ㅤ@gmail.com',
+                            telefono: 'ㅤ',
                             dni: search,
                             cuit: 'SIN DATOS',
                             razon_social: 'SIN DATOS',
@@ -142,7 +145,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                     >
                       <strong>No se encontró a la persona.</strong><br />
                       <span className='text-sm text-gray-500'>
-                        Click aquí para cargar con datos vacíos.
+                        El DNI no existe en el sistema, haz click aquí para generar el libre deuda.
                       </span>
                     </button>
                   </li>
