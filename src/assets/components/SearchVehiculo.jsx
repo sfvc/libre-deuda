@@ -35,6 +35,13 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
     if (!resetFiltro) setSearch('')
   }, [resetFiltro])
 
+  useEffect(() => {
+    if (resetFiltro) {
+      setSearch('')
+      setShow(true)
+    }
+  }, [resetFiltro])
+
   function selectVehiculo (veh) {
     const titularNombre = veh.titular ? deleteDuplicateName(veh.titular.apellido, veh.titular.nombre) : 'SIN TITULAR'
     setSearch(`${veh.dominio} - ${titularNombre}`)

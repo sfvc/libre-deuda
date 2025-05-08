@@ -31,6 +31,7 @@ export default function LibreDeudaPage () {
   const [marbeteImage, setMarbeteImage] = useState(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [showTitularAlert, setShowTitularAlert] = useState(false)
+  const [resetFiltro, setResetFiltro] = useState(false)
   const [formData, setFormData] = useState({
     persona_id: null,
     nombre: null,
@@ -271,7 +272,8 @@ export default function LibreDeudaPage () {
 
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        dataToSend.append(key, value)
+        const val = value === 'ㅤ' ? '' : value
+        dataToSend.append(key, val)
       }
     })
 
@@ -309,25 +311,35 @@ export default function LibreDeudaPage () {
     setShowResults(false)
     setIsValidated(false)
     setShouldDisableFields(true)
-    setEnabled(false)
     setFormData({
-      nombre: '',
-      apellido: '',
-      email: '',
-      telefono: '',
-      dominio: '',
-      marca: '',
-      marca_id: '',
-      modelo: '',
-      tipo: '',
-      tipo_id: '',
-      numero_taxi_remis: ''
+      persona_id: null,
+      nombre: null,
+      apellido: null,
+      email: null,
+      telefono: null,
+      vehiculo_id: null,
+      dominio: null,
+      marca: null,
+      marca_id: null,
+      modelo: null,
+      tipo: null,
+      tipo_id: null,
+      numero_taxi_remis: null
     })
-    setMarbeteImage(null)
+    setFilters({
+      persona_id: '',
+      vehiculo_id: ''
+    })
+    setDisableMarca(true)
+    setDisableModelo(true)
+    setDisableTipo(true)
+    setShowPersonaForm(modoConsulta === 'simple')
+    setErrorMessage('')
     setCedulaImageFrente(null)
     setCedulaImageDorso(null)
+    setMarbeteImage(null)
     setShowTitularAlert(false)
-    setModoConsulta('simple')
+    setResetFiltro(prev => !prev)
   }
 
   useEffect(() => {
@@ -389,6 +401,10 @@ export default function LibreDeudaPage () {
                 )
               : (
                 <>
+                  <Button color='gray' className='w-full mb-2' onClick={resetForm} outline>
+                    Blanquear datos
+                  </Button>
+
                   <h2 className='text-gray-700 dark:text-slate-400 mb-2 font-semibold text-2xl'>
                     Libre Deuda Online
                   </h2>
@@ -411,6 +427,11 @@ export default function LibreDeudaPage () {
                         shouldDisableFields={shouldDisableFields}
                         handlePersonaSelect={handlePersonaSelect}
                         modoConsulta={modoConsulta}
+                        cedulaImageFrente={cedulaImageFrente}
+                        setCedulaImageFrente={setCedulaImageFrente}
+                        cedulaImageDorso={cedulaImageDorso}
+                        setCedulaImageDorso={setCedulaImageDorso}
+                        resetFiltro={resetFiltro}
                       />
                     )}
 
@@ -422,15 +443,12 @@ export default function LibreDeudaPage () {
                         disableMarca={disableMarca}
                         disableModelo={disableModelo}
                         disableTipo={disableTipo}
-                        cedulaImageFrente={cedulaImageFrente}
-                        setCedulaImageFrente={setCedulaImageFrente}
-                        cedulaImageDorso={cedulaImageDorso}
-                        setCedulaImageDorso={setCedulaImageDorso}
                         marbeteImage={marbeteImage}
                         setMarbeteImage={setMarbeteImage}
                         tipos={tipos || []}
                         isLoadingTipos={isLoadingTipos}
                         errorTipos={errorTipos}
+                        resetFiltro={resetFiltro}
                       />
                     )}
 

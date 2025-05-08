@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { TextInput } from 'flowbite-react'
-import juzgadoApi from '@/api/juzgadoApi'
 import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import { useQuery } from '@tanstack/react-query'
+import juzgadoApi from '@/api/juzgadoApi'
 
 function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   const [search, setSearch] = useState('')
@@ -35,6 +35,13 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
     if (!resetFiltro) setSearch('')
   }, [resetFiltro])
 
+  useEffect(() => {
+    if (resetFiltro) {
+      setSearch('')
+      setShow(true)
+    }
+  }, [resetFiltro])
+
   function selectPersona (per) {
     const identificacion = per.numero_documento ? per.numero_documento : per.cuit
     const nombre = deleteDuplicateName(per.apellido, per.nombre)
@@ -48,10 +55,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
         apellido: per.apellido,
         dni: per.numero_documento,
         email: per.email,
-        telefono: per.telefono,
-        cuit: per.cuit,
-        razon_social: per.razon_social,
-        domicilio: per.domicilio
+        telefono: per.telefono
       })
     }
   }
@@ -133,12 +137,9 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                             persona_id: 639757,
                             nombre: 'ㅤ',
                             apellido: 'ㅤ',
-                            email: 'ㅤ@gmail.com',
+                            email: 'ㅤ',
                             telefono: 'ㅤ',
-                            dni: search,
-                            cuit: 'SIN DATOS',
-                            razon_social: 'SIN DATOS',
-                            domicilio: 'SIN DATOS'
+                            dni: search
                           })
                         }
                       }}

@@ -37,17 +37,14 @@ export const DatosVehiculoForm = ({
   disableMarca,
   disableModelo,
   disableTipo,
-  cedulaImageFrente,
-  cedulaImageDorso,
   marbeteImage,
-  setCedulaImageFrente,
-  setCedulaImageDorso,
   setMarbeteImage,
   tipos,
   isLoadingTipos,
-  errorTipos
+  errorTipos,
+  resetFiltro
 }) => {
-  const { isLoading: loadingCedulaFrente, loadingCedulaDorso, loadingMarbete, handleCompressImage } = useImageCompression()
+  const { isLoading: loadingMarbete, handleCompressImage } = useImageCompression()
 
   const handleFileChange = async (e, setter, name) => {
     const file = e.target.files[0]
@@ -70,12 +67,13 @@ export const DatosVehiculoForm = ({
     <>
       <h4 className='mb-2 mt-2 font-medium text-gray-600'>Vehículo</h4>
 
-      <SearchVehiculo onSelectVehiculo={handleVehiculoSelect} />
+      <SearchVehiculo onSelectVehiculo={handleVehiculoSelect} resetFiltro={resetFiltro} />
 
       {formData.marca === 'INDETERMINADO' || !formData.marca
         ? (
           <SearchMarca
             disabled={disableMarca}
+            resetFiltro={resetFiltro}
             onSelectMarca={(marca) => {
               handleInputChange({
                 target: { name: 'marca', value: marca?.nombre || '' }
@@ -153,24 +151,6 @@ export const DatosVehiculoForm = ({
           </Card>
         </>
       )}
-
-      <Card className='shadow-sm'>
-        <FotoDocumentoInput
-          label='Frente de la Cédula del Titular'
-          name='foto_cedula_frente'
-          value={cedulaImageFrente}
-          loading={loadingCedulaFrente}
-          onChange={(e) => handleFileChange(e, setCedulaImageFrente, 'foto_cedula_frente')}
-        />
-
-        <FotoDocumentoInput
-          label='Dorso de la Cédula del Titular'
-          name='foto_cedula_dorso'
-          value={cedulaImageDorso}
-          loading={loadingCedulaDorso}
-          onChange={(e) => handleFileChange(e, setCedulaImageDorso, 'foto_cedula_dorso')}
-        />
-      </Card>
     </>
   )
 }

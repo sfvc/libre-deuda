@@ -35,6 +35,13 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
     if (!resetFiltro) setSearch('')
   }, [resetFiltro])
 
+  useEffect(() => {
+    if (resetFiltro) {
+      setSearch('')
+      setShow(true)
+    }
+  }, [resetFiltro])
+
   function selectMarca (marca) {
     setSearch(marca?.nombre || '')
     setShow(false)
