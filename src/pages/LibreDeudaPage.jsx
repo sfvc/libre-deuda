@@ -294,6 +294,7 @@ export default function LibreDeudaPage () {
         formattedData.marca = formattedData.vehiculo.marca.nombre
         formattedData.tipo = formattedData.vehiculo.tipo.nombre
         formattedData.patente = formattedData.vehiculo.dominio
+        formattedData.numero_taxi_remis = formattedData.vehiculo.numero_taxi_remis
       }
       const { pdfBlob, fileName } = await generarLibreDeudaPDF(formattedData)
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' })

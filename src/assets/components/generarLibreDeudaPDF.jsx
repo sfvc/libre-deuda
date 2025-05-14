@@ -28,7 +28,7 @@ export const generarLibreDeudaPDF = async (data) => {
   const horaActual = hoy.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
   const fechaDB = new Date().toISOString().split('T')[0]
   const fechaValidez = new Date(new Date().setMonth(hoy.getMonth() + 6))
-  const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo
+  const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo || data.numero_taxi_remis
 
   const qrUrl = data.urlParaQR || `https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data.infractorDocumento}_${fechaDB}.pdf`
 
@@ -78,6 +78,7 @@ export const generarLibreDeudaPDF = async (data) => {
               <th>Marca</th><td>${data.marca || ''}</td>
               <th>Modelo</th><td>${data.modelo || ''}</td>
             </tr>
+            ${data.numero_taxi_remis ? `<tr><th>Nº Taxi/Remis</th><td colspan="3">${data.numero_taxi_remis}</td></tr>` : ''}
             <tr>
               <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
             </tr>
