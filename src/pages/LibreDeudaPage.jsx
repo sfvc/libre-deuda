@@ -32,6 +32,7 @@ export default function LibreDeudaPage () {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [showTitularAlert, setShowTitularAlert] = useState(false)
   const [resetFiltro, setResetFiltro] = useState(false)
+  const [numeroLibreDeuda, setNumeroLibreDeuda] = useState(null)
   const [formData, setFormData] = useState({
     persona_id: null,
     nombre: null,
@@ -217,6 +218,52 @@ export default function LibreDeudaPage () {
     }
   }
 
+  const handleSubmit = async () => {
+    setIsVerifying(true)
+
+    const dataToSend = new FormData()
+
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        const val = value === 'ㅤ' ? '' : value
+        dataToSend.append(key, val)
+      }
+    })
+
+    if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
+    if (cedulaImageFrente instanceof File) dataToSend.append('foto_cedula_frente', cedulaImageFrente)
+    if (cedulaImageDorso instanceof File) dataToSend.append('foto_cedula_dorso', cedulaImageDorso)
+
+    try {
+      const response = await postPersonaDatos(dataToSend)
+
+      if (response?.numeroLibreDeuda) {
+        setNumeroLibreDeuda(response.numeroLibreDeuda)
+      }
+
+      setErrorMessage('')
+      setEnabled(false)
+      setIsCheckingStatus(true)
+
+      setTimeout(() => {
+        setEnabled(true)
+        setIsValidated(true)
+        setShowResults(true)
+        setIsCheckingStatus(false)
+        setIsVerifying(false)
+      }, 0)
+    } catch (error) {
+      setIsVerifying(false)
+
+      if (error.response && error.response.data) {
+        const { message } = error.response.data
+        setErrorMessage(message)
+      } else {
+        setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
+      }
+    }
+  }
+
   const handleGenerateLibreDeuda = async () => {
     setIsGeneratingPdf(true)
     try {
@@ -241,7 +288,7 @@ export default function LibreDeudaPage () {
 
       const formattedData = await formatearData(acta)
       formattedData.persona_id = formData.persona_id
-      formattedData.libreDeudaID = Date.now()
+      formattedData.libreDeudaID = numeroLibreDeuda
       formattedData.vehiculo = acta.vehiculo
       if (formattedData.vehiculo) {
         formattedData.marca = formattedData.vehiculo.marca.nombre
@@ -253,7 +300,7 @@ export default function LibreDeudaPage () {
 
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
-      libreDeudaFormData.append('vehiculo_id', formData.vehId)
+      libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
       await postLibreDeuda(libreDeudaFormData)
@@ -262,48 +309,6 @@ export default function LibreDeudaPage () {
       alert('Ocurrió un error al generar el libre deuda.')
     } finally {
       setIsGeneratingPdf(false)
-    }
-  }
-
-  const handleSubmit = async () => {
-    setIsVerifying(true)
-
-    const dataToSend = new FormData()
-
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        const val = value === 'ㅤ' ? '' : value
-        dataToSend.append(key, val)
-      }
-    })
-
-    if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
-    if (cedulaImageFrente instanceof File) dataToSend.append('foto_cedula_frente', cedulaImageFrente)
-    if (cedulaImageDorso instanceof File) dataToSend.append('foto_cedula_dorso', cedulaImageDorso)
-
-    try {
-      await postPersonaDatos(dataToSend)
-
-      setErrorMessage('')
-      setEnabled(false)
-      setIsCheckingStatus(true)
-
-      setTimeout(() => {
-        setEnabled(true)
-        setIsValidated(true)
-        setShowResults(true)
-        setIsCheckingStatus(false)
-        setIsVerifying(false)
-      }, 0)
-    } catch (error) {
-      setIsVerifying(false)
-
-      if (error.response && error.response.data) {
-        const { message } = error.response.data
-        setErrorMessage(message)
-      } else {
-        setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
-      }
     }
   }
 

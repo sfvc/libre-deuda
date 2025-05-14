@@ -33,7 +33,7 @@ export const postPersonaDatos = async (formData) => {
     }
   })
 
-  const { data } = response.data
+  const data = response.data
   return data
 }
 
