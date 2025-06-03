@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link } from 'react-router-dom'
 import Illustration from '@/images/logo_CATACAPI_oscuro.png'
 

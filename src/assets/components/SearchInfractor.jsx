@@ -74,8 +74,8 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
         <TextInput
           name='search'
           type='text'
-          maxLength={8}
-          placeholder='DNI'
+          maxLength={11}
+          placeholder='CUIL'
           value={search}
           onChange={handleSearchChange}
         />
@@ -127,30 +127,9 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                   )
                 : (
                   <li className='hover:bg-slate-300 border-b-2 border-x px-2'>
-                    <button
-                      type='button'
-                      className='w-full text-start py-2'
-                      onClick={() => {
-                        setShow(false)
-                        if (onSelectPersona) {
-                          onSelectPersona({
-                            persona_id: 639757,
-                            nombre: 'ㅤ',
-                            apellido: 'ㅤ',
-                            email: 'ㅤ',
-                            telefono: 'ㅤ',
-                            dni: search
-                          })
-                        }
-                      }}
-                    >
-                      <strong>No se encontró a la persona.</strong><br />
-                      <span className='text-sm text-gray-500'>
-                        El DNI no existe en el sistema, haz click aquí para generar el libre deuda.
-                      </span>
-                    </button>
+                    <strong>No se encontró a la persona.</strong><br />
+                    <p className='text-sm text-gray-500'>Por favor, acércate al Juzgado de Faltas Municipal, Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM ante cualquier duda.</p>
                   </li>
-
                   )}
           </ul>
         )}

@@ -1,13 +1,29 @@
+/* eslint-disable camelcase */
 import { useEffect, useState } from 'react'
-import { TextInput } from 'flowbite-react'
+import { Modal, Button, Label, TextInput, Select } from 'flowbite-react'
 import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import { useQuery } from '@tanstack/react-query'
+import SearchMarca from '@/assets/components/SearchMarca'
 import juzgadoApi from '@/api/juzgadoApi'
+import SearchInfractor from '@/assets/components/SearchInfractor'
+import { getTipos } from '@/services/multasService'
 
 function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
   const [search, setSearch] = useState('')
   const [show, setShow] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [tipoSeleccionado, setTipoSeleccionado] = useState('')
+  const [nuevoVehiculo, setNuevoVehiculo] = useState({
+    persona_id: null,
+    dominio: '',
+    marca_id: null,
+    modelo: '',
+    tipo: '',
+    numero_chasis: '',
+    numero_motor: '',
+    numero_taxi_remis: ''
+  })
 
   const { data: vehiculos = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarVehiculo', search],
@@ -17,6 +33,11 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
       return response.data.data
     },
     enabled: false
+  })
+
+  const { data: tipos, isLoading: isLoadingTipos, error: errorTipos } = useQuery({
+    queryKey: ['tipos'],
+    queryFn: getTipos
   })
 
   useEffect(() => {
@@ -70,6 +91,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
           type='text'
           placeholder='Ingrese la patente del vehículo'
           value={search}
+          maxLength={7}
           onChange={(e) => {
             setSearch(e.target.value)
             setIsTyping(true)
@@ -119,12 +141,131 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                   )
                 : (
                   <li className='hover:bg-slate-300 border-b-2 border-x px-2 py-2'>
-                    <p>No se encontró el vehículo.</p>
-                    <p><p className='text-sm text-gray-500'>Por favor, acércate al Juzgado de Faltas Municipal, Ubicado en la calle Maipu Norte 550 de 07:00 AM hasta 16:00 PM ante cualquier duda.</p></p>
+                    <button
+                      type='button'
+                      className='w-full text-start py-2'
+                      onClick={() => setShowModal(true)}
+                    >
+                      <strong>No se encontró el vehículo.</strong><br />
+                      <span className='text-sm text-gray-500'>
+                        La patente no existe en el sistema, haz click aquí para registrar tu vehículo.
+                      </span>
+                    </button>
                   </li>
                   )}
           </ul>
         )}
+
+        <Modal show={showModal} onClose={() => setShowModal(false)}>
+          <Modal.Header>Crear nuevo vehículo</Modal.Header>
+          <Modal.Body>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div>
+                <Label htmlFor='persona_id' value='Titular' /> <strong className='obligatorio'>(*)</strong>
+                <SearchInfractor onSelectPersona={(persona) => setNuevoVehiculo({ ...nuevoVehiculo, persona_id: persona.persona_id })} />
+              </div>
+              <div>
+                <Label htmlFor='dominio' value='Dominio' /> <strong className='obligatorio'>(*)</strong>
+                <TextInput
+                  id='dominio'
+                  placeholder='Ingrese la patente del vehículo'
+                  className='mb-4'
+                  type='text'
+                  maxLength={7}
+                  value={nuevoVehiculo.dominio}
+                  onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, dominio: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor='modelo' value='Modelo' />
+                <TextInput
+                  id='modelo'
+                  placeholder='Ingrese el modelo del vehículo'
+                  className='mb-4'
+                  type='text'
+                  value={nuevoVehiculo.modelo}
+                  onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, modelo: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor='marca_id' value='Marca' />
+                <SearchMarca onSelectMarca={(marca) => setNuevoVehiculo({ ...nuevoVehiculo, marca_id: marca?.id })} />
+              </div>
+              <div>
+                <Label htmlFor='numero_chasis' value='Número de Chasis' />
+                <TextInput
+                  id='numero_chasis'
+                  placeholder='Ingrese el número de chasis del vehículo'
+                  className='mb-4'
+                  type='text'
+                  value={nuevoVehiculo.numero_chasis}
+                  onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, numero_chasis: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor='numero_motor' value='Número de Motor' />
+                <TextInput
+                  id='numero_motor'
+                  placeholder='Ingrese el número del motor del vehículo'
+                  className='mb-4'
+                  type='text'
+                  value={nuevoVehiculo.numero_motor}
+                  onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, numero_motor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor='tipo' value='Tipo de Vehículo' />
+                <Select
+                  name='tipo'
+                  value={tipoSeleccionado}
+                  className='mb-4'
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setTipoSeleccionado(value)
+                    setNuevoVehiculo({ ...nuevoVehiculo, tipo: value })
+                  }}
+                >
+                  <option value='' className='text-gray-400'>Seleccione el Tipo de Vehículo</option>
+                  {isLoadingTipos
+                    ? <option>Cargando...</option>
+                    : errorTipos
+                      ? <option>Error al cargar</option>
+                      : tipos.map((tipo) => (
+                        <option key={tipo.id} value={tipo.nombre}>
+                          {tipo.nombre}
+                        </option>
+                      ))}
+                </Select>
+              </div>
+              <div>
+                {tipoSeleccionado === 'SERVICIOS PúBLICOS' && (
+                  <div>
+                    <Label htmlFor='numero_taxi_remis' value='Número de Taxi/Remis/Colectivo' />
+                    <TextInput
+                      name='numero_taxi_remis'
+                      placeholder='Número de Taxi/Remis/Colectivo'
+                      value={nuevoVehiculo.numero_taxi_remis || ''}
+                      onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, numero_taxi_remis: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </Modal.Body>
+          <Modal.Footer className='flex justify-end'>
+            <Button
+              onClick={() => {
+                console.log('Datos del vehículo a guardar:', nuevoVehiculo)
+                setShowModal(false)
+              }}
+            >
+              Guardar
+            </Button>
+            <Button color='gray' onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </>
   )

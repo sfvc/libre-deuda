@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom/dist'
 
 export function Layout () {

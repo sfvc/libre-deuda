@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, Button, Modal } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
 import { getActasFilter, getTipos, postPersonaDatos, postLibreDeuda } from '@/services/multasService'
