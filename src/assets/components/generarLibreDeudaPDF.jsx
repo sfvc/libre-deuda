@@ -96,9 +96,9 @@ export const generarLibreDeudaPDF = async (data) => {
 
       <div class="content-box">
         <span class="bold">CERTIFICO</span> que, conforme a los registros del Juzgado Municipal de Faltas, ${tieneDatosVehiculo
-            ? 'el vehículo mencionado no presenta deudas pendientes al día de la fecha.'
-            : 'el ciudadano mencionado no presenta deudas pendientes al día de la fecha.'
-          }
+      ? 'el vehículo mencionado no presenta deudas pendientes al día de la fecha.'
+      : 'el ciudadano mencionado no presenta deudas pendientes al día de la fecha.'
+    }
 
         <br /><br />
         El presente certificado de <span class="bold">LIBRE DEUDA</span> se emite a solicitud del interesado.
@@ -122,7 +122,10 @@ export const generarLibreDeudaPDF = async (data) => {
 
   const pdfBlob = await convertHtmlToPdf(html)
   const fileName = `${data?.libreDeudaID}.pdf`
-  window.open(qrUrl, '_blank')
+
+  setTimeout(() => {
+    window.open(qrUrl, '_blank')
+  }, 1000)
 
   return {
     pdfBlob,
