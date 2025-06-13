@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import imageCompression from 'browser-image-compression'
+import { useState } from 'react'
 
 export const useImageCompression = () => {
   const [isLoading, setIsLoading] = useState(false)

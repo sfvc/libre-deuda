@@ -1,7 +1,7 @@
-import React from 'react'
 import { FileInput, Label, TextInput, Spinner, Card } from 'flowbite-react'
-import { useImageCompression } from '@/assets/components/useImageCompression'
+import { useEffect, useState } from 'react'
 import SearchInfractor from '@/assets/components/SearchInfractor'
+import { useImageCompression } from '@/assets/components/useImageCompression'
 
 const FotoDocumentoInput = ({ label, name, value, loading, onChange }) => (
   <div className='mb-4'>
@@ -38,9 +38,12 @@ export const DatosPersonalesForm = ({
   cedulaImageFrente,
   cedulaImageDorso,
   modoConsulta = 'simple',
-  resetFiltro
+  resetFiltro,
+  fromVehicleSearch = false
 }) => {
   const { isLoading: loadingCedulaFrente, loadingCedulaDorso, handleCompressImage } = useImageCompression()
+
+  const [habilitarContacto, setHabilitarContacto] = useState(false)
 
   const handleFileChange = async (e, setter, name) => {
     const file = e.target.files[0]
@@ -59,13 +62,29 @@ export const DatosPersonalesForm = ({
     }
   }
 
+  const onPersonaSelect = (persona) => {
+    handlePersonaSelect(persona)
+
+    if ((!formData.email && !formData.telefono) || fromVehicleSearch) {
+      setHabilitarContacto(true)
+    }
+  }
+
+  useEffect(() => {
+    if (fromVehicleSearch) {
+      setHabilitarContacto(true)
+    }
+  }, [fromVehicleSearch])
+
+  const shouldEnableContact = habilitarContacto || fromVehicleSearch || formData.email || formData.telefono
+
   return (
     <div>
       <h4 className='mb-2 font-medium text-gray-600'>
         {modoConsulta === 'simple' ? 'Persona' : 'Titular'}
       </h4>
 
-      <SearchInfractor onSelectPersona={handlePersonaSelect} resetFiltro={resetFiltro} />
+      <SearchInfractor onSelectPersona={onPersonaSelect} resetFiltro={resetFiltro} />
 
       <TextInput
         name='nombre'
@@ -92,6 +111,7 @@ export const DatosPersonalesForm = ({
         className='mb-3'
         value={formData.email || ''}
         onChange={handleInputChange}
+        disabled={!shouldEnableContact}
       />
 
       <TextInput
@@ -104,6 +124,7 @@ export const DatosPersonalesForm = ({
           const value = e.target.value.replace(/\D/g, '')
           handleInputChange({ target: { name: 'telefono', value } })
         }}
+        disabled={!shouldEnableContact}
       />
 
       {modoConsulta === 'completo' && (

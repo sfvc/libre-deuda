@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { TextInput } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
+import { TextInput } from 'flowbite-react'
+import { useEffect, useState } from 'react'
 import juzgadoApi from '@/api/juzgadoApi'
 
 function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {

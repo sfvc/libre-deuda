@@ -1,7 +1,7 @@
-import { convertHtmlToPdf } from '@/services/gotenbergService'
-import { formatDate } from '@/assets/util/formatDate'
 import QRCode from 'qrcode'
+import { formatDate } from '@/assets/util/formatDate'
 import logoCataCapi from '@/images/logo_CATACAPI_oscuro.png'
+import { convertHtmlToPdf } from '@/services/gotenbergService'
 
 const convertirImagenABase64 = (ruta) => {
   return new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ export const generarLibreDeudaPDF = async (data) => {
       </div>
 
       <div class="footer">
-        La autenticidad de este certificado puede verificarse escaneando el código QR o ingresando al sitio web oficial.<br />
+        La autenticidad de este certificado puede verificarse escaneando el código QR.<br />
       </div>
     </body>
   </html>

@@ -1,11 +1,12 @@
 /* eslint-disable camelcase */
-import { useEffect, useState } from 'react'
-import { Modal, Button, Label, TextInput, Select } from 'flowbite-react'
-import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import { useQuery } from '@tanstack/react-query'
-import SearchMarca from '@/assets/components/SearchMarca'
+import { Modal, Button, Label, TextInput, Select } from 'flowbite-react'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import juzgadoApi from '@/api/juzgadoApi'
 import SearchInfractor from '@/assets/components/SearchInfractor'
+import SearchMarca from '@/assets/components/SearchMarca'
 import { getTipos } from '@/services/multasService'
 
 function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
@@ -15,11 +16,11 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
   const [showModal, setShowModal] = useState(false)
   const [tipoSeleccionado, setTipoSeleccionado] = useState('')
   const [nuevoVehiculo, setNuevoVehiculo] = useState({
-    persona_id: null,
+    titular_id: null,
     dominio: '',
     marca_id: null,
     modelo: '',
-    tipo: '',
+    tipo_id: '',
     numero_chasis: '',
     numero_motor: '',
     numero_taxi_remis: ''
@@ -76,8 +77,9 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
         titular: veh?.titular,
         marca: veh?.marca || '',
         marca_id: veh?.marca?.id || '',
-        modelo: veh?.modelo || '',
+        modelo: ['0', '1', '2', '3', '4'].includes(veh?.modelo) ? '' : veh?.modelo || '',
         tipo: veh?.tipo || '',
+        tipo_id: veh?.tipo?.id || '',
         numero_taxi_remis: veh?.numero_taxi_remis || ''
       })
     }
@@ -85,6 +87,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
 
   return (
     <>
+
       <div className='mb-4 relative'>
         <TextInput
           name='search'
@@ -162,7 +165,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
                 <Label htmlFor='persona_id' value='Titular' /> <strong className='obligatorio'>(*)</strong>
-                <SearchInfractor onSelectPersona={(persona) => setNuevoVehiculo({ ...nuevoVehiculo, persona_id: persona.persona_id })} />
+                <SearchInfractor onSelectPersona={(persona) => setNuevoVehiculo({ ...nuevoVehiculo, titular_id: persona.persona_id })} />
               </div>
               <div>
                 <Label htmlFor='dominio' value='Dominio' /> <strong className='obligatorio'>(*)</strong>
@@ -214,15 +217,15 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                 />
               </div>
               <div>
-                <Label htmlFor='tipo' value='Tipo de Vehículo' />
+                <Label htmlFor='tipo_id' value='Tipo de Vehículo' />
                 <Select
-                  name='tipo'
+                  name='tipo_id'
                   value={tipoSeleccionado}
                   className='mb-4'
                   onChange={(e) => {
                     const value = e.target.value
                     setTipoSeleccionado(value)
-                    setNuevoVehiculo({ ...nuevoVehiculo, tipo: value })
+                    setNuevoVehiculo({ ...nuevoVehiculo, tipo_id: value })
                   }}
                 >
                   <option value='' className='text-gray-400'>Seleccione el Tipo de Vehículo</option>
@@ -231,14 +234,14 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                     : errorTipos
                       ? <option>Error al cargar</option>
                       : tipos.map((tipo) => (
-                        <option key={tipo.id} value={tipo.nombre}>
+                        <option key={tipo.id} value={tipo.id}>
                           {tipo.nombre}
                         </option>
                       ))}
                 </Select>
               </div>
               <div>
-                {tipoSeleccionado === 'SERVICIOS PúBLICOS' && (
+                {tipoSeleccionado === '50067' && (
                   <div>
                     <Label htmlFor='numero_taxi_remis' value='Número de Taxi/Remis/Colectivo' />
                     <TextInput
@@ -254,9 +257,30 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
           </Modal.Body>
           <Modal.Footer className='flex justify-end'>
             <Button
-              onClick={() => {
-                console.log('Datos del vehículo a guardar:', nuevoVehiculo)
-                setShowModal(false)
+              onClick={async () => {
+                try {
+                  const response = await juzgadoApi.post('libre-deuda/vehiculos', nuevoVehiculo)
+                  const vehiculoGuardado = response.data?.data
+
+                  toast.success('Vehículo guardado correctamente')
+
+                  selectVehiculo(vehiculoGuardado)
+                  setNuevoVehiculo({
+                    titular_id: null,
+                    dominio: '',
+                    marca_id: null,
+                    modelo: '',
+                    tipo_id: '',
+                    numero_chasis: '',
+                    numero_motor: '',
+                    numero_taxi_remis: ''
+                  })
+                  setTipoSeleccionado('')
+                  setShowModal(false)
+                } catch (error) {
+                  console.error('Error al guardar el vehículo:', error)
+                  toast.error('Ocurrió un error al guardar el vehículo, la patente ya existe')
+                }
               }}
             >
               Guardar

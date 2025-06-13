@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Error from '@/pages/404'
 import Layout from '@/assets/layout/Layout'
+import Error from '@/pages/404'
 import LibreDeudaPage from '@/pages/LibreDeudaPage'
 
 function App () {

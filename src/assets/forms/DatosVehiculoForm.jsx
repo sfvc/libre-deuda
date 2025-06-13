@@ -1,8 +1,7 @@
-import React from 'react'
 import { FileInput, Label, Select, TextInput, Spinner, Card } from 'flowbite-react'
-import { useImageCompression } from '@/assets/components/useImageCompression'
-import SearchVehiculo from '@/assets/components/SearchVehiculo'
 import SearchMarca from '@/assets/components/SearchMarca'
+import SearchVehiculo from '@/assets/components/SearchVehiculo'
+import { useImageCompression } from '@/assets/components/useImageCompression'
 
 const FotoDocumentoInput = ({ label, name, value, loading, onChange }) => (
   <div className='mb-4'>

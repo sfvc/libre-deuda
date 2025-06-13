@@ -1,62 +1,49 @@
-import { useEffect, useState } from 'react'
-import { Alert, Button, Modal } from 'flowbite-react'
 import { useQuery } from '@tanstack/react-query'
-import { getActasFilter, getTipos, postPersonaDatos, postLibreDeuda } from '@/services/multasService'
-import { formatearData } from '@/assets/util/formatData'
-import { ModoConsulta } from '@/assets/components/ModoConsulta'
+import { Alert, Button, Modal } from 'flowbite-react'
+import { useEffect } from 'react'
 import { generarLibreDeudaPDF } from '@/assets/components/generarLibreDeudaPDF'
-import { ResultadosForm } from '@/assets/forms/ResultadosForm'
+import { ModoConsulta } from '@/assets/components/ModoConsulta'
 import { DatosPersonalesForm } from '@/assets/forms/DatosPersonalesForm'
 import { DatosVehiculoForm } from '@/assets/forms/DatosVehiculoForm'
-import DefaultNavbar from '@/assets/layout/DefaultNavbar'
+import { ResultadosForm } from '@/assets/forms/ResultadosForm'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
+import DefaultNavbar from '@/assets/layout/DefaultNavbar'
+import { formatearData } from '@/assets/util/formatData'
+import { useFormHandlers } from '@/hooks/useFormHandlers'
+import { useFormValidation } from '@/hooks/useFormValidation'
+import { useLibreDeudaState } from '@/hooks/useLibreDeudaState'
 import Loading from '@/Loading'
+import { getActasFilter, getTipos, postLibreDeuda } from '@/services/multasService'
 
 export default function LibreDeudaPage () {
-  const [modoConsulta, setModoConsulta] = useState('simple')
-  const [showPersonaForm, setShowPersonaForm] = useState(modoConsulta === 'simple')
-  const [errorMessage, setErrorMessage] = useState('')
-  const [enabled, setEnabled] = useState(false)
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
-  const [shouldDisableFields, setShouldDisableFields] = useState(true)
-  const [showDeclarationModal, setShowDeclarationModal] = useState(false)
-  const [isValidated, setIsValidated] = useState(false)
-  const [showResults, setShowResults] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [disableMarca, setDisableMarca] = useState(true)
-  const [disableModelo, setDisableModelo] = useState(true)
-  const [disableTipo, setDisableTipo] = useState(true)
-  const [cedulaImageFrente, setCedulaImageFrente] = useState(null)
-  const [cedulaImageDorso, setCedulaImageDorso] = useState(null)
-  const [marbeteImage, setMarbeteImage] = useState(null)
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
-  const [showTitularAlert, setShowTitularAlert] = useState(false)
-  const [resetFiltro, setResetFiltro] = useState(false)
-  const [numeroLibreDeuda, setNumeroLibreDeuda] = useState(null)
-  const [formData, setFormData] = useState({
-    persona_id: null,
-    nombre: null,
-    apellido: null,
-    email: null,
-    telefono: null,
-    vehiculo_id: null,
-    dominio: null,
-    marca: null,
-    marca_id: null,
-    modelo: null,
-    tipo: null,
-    tipo_id: null,
-    numero_taxi_remis: null
-  })
+  const state = useLibreDeudaState()
+  const handlers = useFormHandlers(state)
+  const { validateForm } = useFormValidation(state.formData, state.modoConsulta, state.images)
 
-  const [filters, setFilters] = useState({
-    persona_id: '',
-    vehiculo_id: ''
-  })
+  const {
+    modoConsulta, setModoConsulta,
+    showPersonaForm, setShowPersonaForm,
+    errorMessage, setErrorMessage,
+    enabled,
+    isCheckingStatus,
+    showDeclarationModal, setShowDeclarationModal,
+    isValidated,
+    showResults,
+    isVerifying,
+    isGeneratingPdf, setIsGeneratingPdf,
+    showTitularAlert,
+    resetFiltro,
+    numeroLibreDeuda,
+    fromVehicleSearch,
+    formData,
+    setFormData,
+    filters,
+    vehicleFieldsState,
+    images, setImages,
+    resetForm
+  } = state
 
-  const validateMarca = () => formData.marca && formData.marca.trim().length > 0
-  const validateModelo = () => formData.modelo && formData.modelo.trim().length > 0
-  const validateTipo = () => formData.tipo && formData.tipo.trim().length > 0
+  const { handleInputChange, handlePersonaSelect, handleVehiculoSelect, handleSubmit } = handlers
 
   const { data, isLoading } = useQuery({
     queryKey: ['actas', filters, modoConsulta],
@@ -74,102 +61,13 @@ export default function LibreDeudaPage () {
     queryFn: getTipos
   })
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-
-    if (name === 'tipo' && tipos) {
-      const tipoSeleccionado = tipos.find((t) => t.nombre === value)
-      setFormData((prev) => ({
-        ...prev,
-        tipo: value,
-        tipo_id: tipoSeleccionado?.id || ''
-      }))
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value
-      }))
-    }
-  }
-
-  const handlePersonaSelect = (persona) => {
-    setFilters((prev) => ({ ...prev, persona_id: persona.persona_id || persona.id || '' }))
-
-    setFormData((prev) => ({
-      ...prev,
-      persona_id: persona?.persona_id || persona?.id || '',
-      nombre: persona?.nombre || '',
-      apellido: persona?.apellido || '',
-      email: persona.email || '',
-      telefono: persona.telefono || '',
-      dni: persona?.documento || persona?.dni || ''
-    }))
-
-    setShouldDisableFields(false)
-  }
-
-  const handleVehiculoSelect = (vehiculo) => {
-    const id = vehiculo.vehiculo_id
-    setFilters(prev => ({
-      ...prev,
-      vehiculo_id: id,
-      persona_id: vehiculo.titular?.id || ''
-    }))
-    setFormData(prev => ({
-      ...prev,
-      vehiculo_id: vehiculo.id,
-      dominio: vehiculo.dominio,
-      marca: vehiculo.marca?.nombre || '',
-      marca_id: vehiculo.marca?.id || '',
-      modelo: vehiculo.modelo,
-      tipo: vehiculo.tipo?.nombre || '',
-      tipo_id: vehiculo.tipo?.id || '',
-      numero_taxi_remis: vehiculo.numero_taxi_remis || ''
-    }))
-    setDisableMarca(false)
-    setDisableModelo(false)
-    setDisableTipo(false)
-
-    if (modoConsulta === 'completo') {
-      setShowPersonaForm(true)
-
-      if (vehiculo.titular) {
-        setFormData(prev => ({
-          ...prev,
-          persona_id: vehiculo.titular.id,
-          nombre: vehiculo.titular.nombre,
-          apellido: vehiculo.titular.apellido,
-          email: vehiculo.titular.email || '',
-          telefono: vehiculo.titular.telefono || '',
-          dni: vehiculo?.titular.numero_documento || vehiculo?.titular.documento || ''
-        }))
-        setShouldDisableFields(true)
-        setShowTitularAlert(false)
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          persona_id: null,
-          nombre: '',
-          apellido: '',
-          email: '',
-          telefono: '',
-          dni: ''
-        }))
-        setShouldDisableFields(false)
-        setShowTitularAlert(true)
-      }
-    }
-  }
-
   const handleMultasPagadas = () => {
     if (isCheckingStatus) {
       return <Loading />
     }
-
     if (!data?.data || !Array.isArray(data.data) || data.data.length === 0) {
       return true
     }
-
     return data.data.every((multa) => {
       const estados = multa?.estadosActa || []
       return estados.some((estado) => {
@@ -179,88 +77,13 @@ export default function LibreDeudaPage () {
     })
   }
 
-  const validateForm = () => {
-    const validationRules = {
-      Nombre: formData.nombre,
-      Apellido: formData.apellido,
-      'Correo Electrónico': formData.email,
-      Teléfono: formData.telefono
-
-    }
-
-    if (modoConsulta === 'completo') {
-      Object.assign(validationRules, {
-        Dominio: formData.dominio,
-        Marca: validateMarca(),
-        Modelo: validateModelo(),
-        'Tipo de vehículo': validateTipo(),
-        'Frente de la cédula': cedulaImageFrente,
-        'Dorso de la cédula': cedulaImageDorso
-      })
-    }
-
-    const missingFields = Object.entries(validationRules)
-      .filter(([_, value]) => !value)
-      .map(([field]) => `• ${field}`)
-
-    if (missingFields.length > 0) {
-      setErrorMessage(missingFields.join('\n'))
-      return false
-    }
-
-    setErrorMessage('')
-    return true
-  }
-
   const handleCheckAndShowModal = () => {
-    if (validateForm()) {
+    const { isValid, errorMessage } = validateForm()
+    if (isValid) {
       setShowDeclarationModal(true)
-    }
-  }
-
-  const handleSubmit = async () => {
-    setIsVerifying(true)
-
-    const dataToSend = new FormData()
-
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        const val = value === 'ㅤ' ? '' : value
-        dataToSend.append(key, val)
-      }
-    })
-
-    if (marbeteImage instanceof File) dataToSend.append('foto_marbete', marbeteImage)
-    if (cedulaImageFrente instanceof File) dataToSend.append('foto_cedula_frente', cedulaImageFrente)
-    if (cedulaImageDorso instanceof File) dataToSend.append('foto_cedula_dorso', cedulaImageDorso)
-
-    try {
-      const response = await postPersonaDatos(dataToSend)
-
-      if (response?.numeroLibreDeuda) {
-        setNumeroLibreDeuda(response.numeroLibreDeuda)
-      }
-
       setErrorMessage('')
-      setEnabled(false)
-      setIsCheckingStatus(true)
-
-      setTimeout(() => {
-        setEnabled(true)
-        setIsValidated(true)
-        setShowResults(true)
-        setIsCheckingStatus(false)
-        setIsVerifying(false)
-      }, 0)
-    } catch (error) {
-      setIsVerifying(false)
-
-      if (error.response && error.response.data) {
-        const { message } = error.response.data
-        setErrorMessage(message)
-      } else {
-        setErrorMessage('Ocurrió un error al enviar los datos. Revisá los campos e intentá nuevamente.')
-      }
+    } else {
+      setErrorMessage(errorMessage)
     }
   }
 
@@ -290,15 +113,16 @@ export default function LibreDeudaPage () {
       formattedData.persona_id = formData.persona_id
       formattedData.libreDeudaID = numeroLibreDeuda
       formattedData.vehiculo = acta.vehiculo
+
       if (formattedData.vehiculo) {
         formattedData.marca = formattedData.vehiculo.marca.nombre
         formattedData.tipo = formattedData.vehiculo.tipo.nombre
         formattedData.patente = formattedData.vehiculo.dominio
         formattedData.numero_taxi_remis = formattedData.vehiculo.numero_taxi_remis
       }
+
       const { pdfBlob, fileName } = await generarLibreDeudaPDF(formattedData)
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' })
-
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
       libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
@@ -311,41 +135,6 @@ export default function LibreDeudaPage () {
     } finally {
       setIsGeneratingPdf(false)
     }
-  }
-
-  const resetForm = () => {
-    setShowResults(false)
-    setIsValidated(false)
-    setShouldDisableFields(true)
-    setFormData({
-      persona_id: null,
-      nombre: null,
-      apellido: null,
-      email: null,
-      telefono: null,
-      vehiculo_id: null,
-      dominio: null,
-      marca: null,
-      marca_id: null,
-      modelo: null,
-      tipo: null,
-      tipo_id: null,
-      numero_taxi_remis: null
-    })
-    setFilters({
-      persona_id: '',
-      vehiculo_id: ''
-    })
-    setDisableMarca(true)
-    setDisableModelo(true)
-    setDisableTipo(true)
-    setShowPersonaForm(modoConsulta === 'simple')
-    setErrorMessage('')
-    setCedulaImageFrente(null)
-    setCedulaImageDorso(null)
-    setMarbeteImage(null)
-    setShowTitularAlert(false)
-    setResetFiltro(prev => !prev)
   }
 
   useEffect(() => {
@@ -361,15 +150,19 @@ export default function LibreDeudaPage () {
         tipo_id: '',
         numero_taxi_remis: ''
       }))
-      setCedulaImageFrente(null)
-      setCedulaImageDorso(null)
-      setMarbeteImage(null)
-      setDisableMarca(true)
-      setDisableModelo(true)
-      setDisableTipo(true)
+      setImages({
+        cedulaImageFrente: null,
+        cedulaImageDorso: null,
+        marbeteImage: null
+      })
+      state.setVehicleFieldsState({
+        disableMarca: true,
+        disableModelo: true,
+        disableTipo: true
+      })
       setModoConsulta('simple')
-      setShowTitularAlert(false)
-      setFilters((prev) => ({
+      state.setShowTitularAlert(false)
+      state.setFilters((prev) => ({
         ...prev,
         vehiculo_id: ''
       }))
@@ -387,11 +180,9 @@ export default function LibreDeudaPage () {
   return (
     <div className='min-h-screen flex flex-col bg-gradient-to-r from-blue-50 via-blue-100 to-blue-200 dark:bg-slate-900'>
       <DefaultNavbar />
-
       <main className='flex flex-1 justify-center items-center px-4 py-4'>
         <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-xl text-center space-y-4 flex flex-col items-center'>
-          <div className='bg-white p-6 shadow-xl rounded-lg w-full max-w-md transition-all duration-300 flex flex-col items-center'>
-
+          <div className='bg-white md:p-6 md:shadow-xl md:rounded-lg w-full max-w-md transition-all duration-300 flex flex-col items-center'>
             {!showResults && <ModoConsulta modoConsulta={modoConsulta} setModoConsulta={setModoConsulta} />}
 
             {isValidated && showResults
@@ -408,49 +199,47 @@ export default function LibreDeudaPage () {
               : (
                 <>
                   <Button color='gray' className='w-full mb-2' onClick={resetForm} outline>
-                    Blanquear datos
+                    Limpiar formulario y comenzar de nuevo
                   </Button>
 
-                  <h2 className='text-gray-700 dark:text-slate-400 mb-2 font-semibold text-2xl'>
-                    Libre Deuda Online
-                  </h2>
+                  <p className='text-sm text-gray-600 mb-4'>
+                    <strong>Consultar por Persona:</strong> Solo ingresás tus datos personales buscando por CUIL.<br />
+                    <strong>Consultar por Vehículo:</strong> Ingresás también los datos del vehículo para emitir el Libre Deuda completo.
+                  </p>
 
                   <div className='w-full'>
-                    <p className='text-black mb-4'>
-                      Si el email o teléfono no está completado al buscar, por favor, completalo para verificarlo correctamente.
-                    </p>
-
                     {showTitularAlert && (
                       <Alert color='warning' className='mb-4'>
-                        El vehículo no tiene titular asociado. Por favor completá los datos ingresando el DNI del mismo.
+                        El vehículo no tiene titular asociado. Por favor completá los datos ingresando el CUIL del mismo.
                       </Alert>
                     )}
 
                     {showPersonaForm && (
                       <DatosPersonalesForm
                         formData={formData}
-                        handleInputChange={handleInputChange}
-                        shouldDisableFields={shouldDisableFields}
+                        handleInputChange={(e) => handleInputChange(e, tipos)}
+                        shouldDisableFields={state.shouldDisableFields}
                         handlePersonaSelect={handlePersonaSelect}
                         modoConsulta={modoConsulta}
-                        cedulaImageFrente={cedulaImageFrente}
-                        setCedulaImageFrente={setCedulaImageFrente}
-                        cedulaImageDorso={cedulaImageDorso}
-                        setCedulaImageDorso={setCedulaImageDorso}
+                        cedulaImageFrente={images.cedulaImageFrente}
+                        setCedulaImageFrente={(img) => setImages(prev => ({ ...prev, cedulaImageFrente: img }))}
+                        cedulaImageDorso={images.cedulaImageDorso}
+                        setCedulaImageDorso={(img) => setImages(prev => ({ ...prev, cedulaImageDorso: img }))}
                         resetFiltro={resetFiltro}
+                        fromVehicleSearch={fromVehicleSearch}
                       />
                     )}
 
                     {modoConsulta === 'completo' && (
                       <DatosVehiculoForm
                         formData={formData}
-                        handleInputChange={handleInputChange}
+                        handleInputChange={(e) => handleInputChange(e, tipos)}
                         handleVehiculoSelect={handleVehiculoSelect}
-                        disableMarca={disableMarca}
-                        disableModelo={disableModelo}
-                        disableTipo={disableTipo}
-                        marbeteImage={marbeteImage}
-                        setMarbeteImage={setMarbeteImage}
+                        disableMarca={vehicleFieldsState.disableMarca}
+                        disableModelo={vehicleFieldsState.disableModelo}
+                        disableTipo={vehicleFieldsState.disableTipo}
+                        marbeteImage={images.marbeteImage}
+                        setMarbeteImage={(img) => setImages(prev => ({ ...prev, marbeteImage: img }))}
                         tipos={tipos || []}
                         isLoadingTipos={isLoadingTipos}
                         errorTipos={errorTipos}
@@ -470,7 +259,7 @@ export default function LibreDeudaPage () {
                       onClick={handleCheckAndShowModal}
                       disabled={isVerifying}
                     >
-                      {isVerifying ? <Loading /> : 'Verificar Datos'}
+                      {isVerifying ? <Loading /> : 'Verificar y Continuar'}
                     </Button>
                   </div>
                 </>
@@ -515,7 +304,6 @@ export default function LibreDeudaPage () {
           </div>
         </div>
       </main>
-
       <DefaultFooter />
     </div>
   )

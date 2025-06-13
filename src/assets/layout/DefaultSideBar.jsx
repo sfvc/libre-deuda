@@ -1,7 +1,6 @@
-import React from 'react'
 import { Sidebar } from 'flowbite-react'
-import { Link, Outlet } from 'react-router-dom'
 import { BsCardHeading } from 'react-icons/bs'
+import { Link, Outlet } from 'react-router-dom'
 
 export function DefaultSideBar ({ sidebarOpen }) {
   return (

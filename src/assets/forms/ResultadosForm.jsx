@@ -1,4 +1,3 @@
-import React from 'react'
 import { Alert, Button } from 'flowbite-react'
 import Loading from '@/Loading'
 

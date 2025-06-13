@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { TextInput } from 'flowbite-react'
-import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import { useQuery } from '@tanstack/react-query'
+import { TextInput } from 'flowbite-react'
+import { useEffect, useState } from 'react'
+import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import juzgadoApi from '@/api/juzgadoApi'
 
 function SearchInfractor ({ resetFiltro, onSelectPersona }) {
