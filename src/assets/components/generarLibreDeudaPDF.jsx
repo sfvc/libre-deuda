@@ -26,12 +26,11 @@ const convertirImagenABase64 = (ruta) => {
 export const generarLibreDeudaPDF = async (data) => {
   const hoy = new Date()
   const horaActual = hoy.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })
-  const fechaDB = new Date().toISOString().split('T')[0]
   const fechaValidez = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000)
   const tieneDatosVehiculo = data.patente || data.tipo || data.marca || data.modelo || data.numero_taxi_remis
 
   const visorUrlBase = 'https://catamarcacapitalvisorpdf.netlify.app/index.html'
-  const pdfUrl = data.urlParaQR || `https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data.infractorDocumento}_${fechaDB}.pdf`
+  const pdfUrl = data.urlParaQR || `https://archivos-cc.sfo3.digitaloceanspaces.com/juzgado/libre-deuda/${data?.libreDeudaID}.pdf`
   const qrUrl = `${visorUrlBase}?file=${encodeURIComponent(pdfUrl)}`
 
   const [qrData, logoBase64] = await Promise.all([
@@ -122,7 +121,7 @@ export const generarLibreDeudaPDF = async (data) => {
 `
 
   const pdfBlob = await convertHtmlToPdf(html)
-  const fileName = `${data.infractorDocumento}_${fechaDB}.pdf`
+  const fileName = `${data?.libreDeudaID}.pdf`
   window.open(qrUrl, '_blank')
 
   return {
