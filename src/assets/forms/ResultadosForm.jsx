@@ -39,7 +39,7 @@ export const ResultadosForm = ({
               </Alert>
               <Button
                 className='mt-6 w-full py-3 rounded-lg transition duration-300 ease-in-out text-white text-lg flex justify-center items-center
-            disabled:bg-gray-400 bg-blue-500 hover:bg-blue-600'
+              disabled:bg-gray-400 bg-blue-500 hover:bg-blue-600'
                 onClick={handleGenerate}
                 disabled={isGeneratingPdf || hasGeneratedLibreDeuda}
               >
