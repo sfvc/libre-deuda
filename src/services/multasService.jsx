@@ -10,12 +10,6 @@ export const getActasFilter = async (filters) => {
   return response.data
 }
 
-export const getActaById = async (filters) => {
-  const response = await juzgadoApi.get(`libre-deuda/actas/${filters.id}`)
-  const { data } = response.data
-  return data
-}
-
 export const getTipos = async () => {
   const response = await juzgadoApi.get('libre-deuda/vehiculos-data')
   return response.data.tipo

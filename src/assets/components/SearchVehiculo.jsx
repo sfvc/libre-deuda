@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Modal, Button, Label, TextInput, Select } from 'flowbite-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import { addToast } from './ToastContainer'
 import { deleteDuplicateName } from '../util/deleteDuplicateName'
 import juzgadoApi from '@/api/juzgadoApi'
 import SearchInfractor from '@/assets/components/SearchInfractor'
@@ -267,7 +267,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                   const response = await juzgadoApi.post('libre-deuda/vehiculos', nuevoVehiculo)
                   const vehiculoGuardado = response.data?.data
 
-                  toast.success('Vehículo guardado correctamente')
+                  addToast('success', 'Vehículo guardado correctamente')
 
                   selectVehiculo(vehiculoGuardado)
                   setNuevoVehiculo({
@@ -284,7 +284,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                   setShowModal(false)
                 } catch (error) {
                   console.error('Error al guardar el vehículo:', error)
-                  toast.error('Ocurrió un error al guardar el vehículo, la patente ya existe')
+                  addToast('error', 'Ocurrió un error al guardar el vehículo, la patente ya existe')
                 }
               }}
             >

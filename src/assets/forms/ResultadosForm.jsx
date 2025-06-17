@@ -1,6 +1,6 @@
 import { Alert, Button } from 'flowbite-react'
 import { useState } from 'react'
-import { toast } from 'react-toastify'
+import { addToast } from '../components/ToastContainer'
 import Loading from '@/Loading'
 
 export const ResultadosForm = ({
@@ -17,12 +17,11 @@ export const ResultadosForm = ({
     try {
       await handleGenerateLibreDeuda()
       setHasGeneratedLibreDeuda(true)
-      toast.success('¡Libre deuda generado correctamente!')
+      addToast('success', '¡Libre deuda generado correctamente!')
     } catch (error) {
-      toast.error('Hubo un error al generar el libre deuda. Intenta nuevamente.')
+      addToast('error', 'Hubo un error al generar el libre deuda. Intenta nuevamente.')
     }
   }
-
   return (
     <div className='text-center w-full'>
       {isLoading
