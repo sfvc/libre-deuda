@@ -95,6 +95,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
           placeholder='Ingrese la patente del vehículo'
           value={search}
           maxLength={7}
+          style={{ textTransform: 'uppercase' }}
           onChange={(e) => {
             setSearch(e.target.value)
             setIsTyping(true)
@@ -176,7 +177,9 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                   type='text'
                   maxLength={7}
                   value={nuevoVehiculo.dominio}
-                  onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, dominio: e.target.value })}
+                  style={{ textTransform: 'uppercase' }}
+                  onChange={(e) =>
+                    setNuevoVehiculo({ ...nuevoVehiculo, dominio: e.target.value.toUpperCase() })}
                 />
               </div>
               <div>
@@ -187,7 +190,9 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
                   className='mb-4'
                   type='text'
                   value={nuevoVehiculo.modelo}
-                  onChange={(e) => setNuevoVehiculo({ ...nuevoVehiculo, modelo: e.target.value })}
+                  style={{ textTransform: 'uppercase' }}
+                  onChange={(e) =>
+                    setNuevoVehiculo({ ...nuevoVehiculo, modelo: e.target.value.toUpperCase() })}
                 />
               </div>
               <div>

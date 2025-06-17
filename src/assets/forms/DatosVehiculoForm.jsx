@@ -98,6 +98,7 @@ export const DatosVehiculoForm = ({
       <TextInput
         name='modelo'
         placeholder='Modelo del Vehículo'
+        style={{ textTransform: 'uppercase' }}
         className='mb-3'
         value={formData.modelo || ''}
         onChange={handleInputChange}

@@ -61,6 +61,7 @@ function SearchMarca ({ resetFiltro, onSelectMarca, disabled }) {
         type='text'
         placeholder='Ingrese la marca del vehículo'
         value={search}
+        style={{ textTransform: 'uppercase' }}
         disabled={disabled}
         onChange={(e) => {
           setSearch(e.target.value)

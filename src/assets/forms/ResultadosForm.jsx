@@ -1,5 +1,6 @@
 import { Alert, Button } from 'flowbite-react'
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 import Loading from '@/Loading'
 
 export const ResultadosForm = ({
@@ -13,8 +14,13 @@ export const ResultadosForm = ({
   const [hasGeneratedLibreDeuda, setHasGeneratedLibreDeuda] = useState(false)
 
   const handleGenerate = async () => {
-    await handleGenerateLibreDeuda()
-    setHasGeneratedLibreDeuda(true)
+    try {
+      await handleGenerateLibreDeuda()
+      setHasGeneratedLibreDeuda(true)
+      toast.success('¡Libre deuda generado correctamente!')
+    } catch (error) {
+      toast.error('Hubo un error al generar el libre deuda. Intenta nuevamente.')
+    }
   }
 
   return (
