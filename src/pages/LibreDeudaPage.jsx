@@ -95,7 +95,8 @@ export default function LibreDeudaPage () {
         infractores: [{
           nombre: formData.nombre,
           apellido: formData.apellido,
-          documento: formData.dni || formData.infractorDocumento
+          documento: formData.dni || formData.infractorDocumento,
+          cuit: formData.cuit || formData.cuit
         }],
         vehiculo: vehId
           ? {

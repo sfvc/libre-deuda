@@ -6,30 +6,33 @@ import juzgadoApi from '@/api/juzgadoApi'
 
 function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
   const [show, setShow] = useState(true)
   const [isTyping, setIsTyping] = useState(false)
+  const [hasSelectedPersona, setHasSelectedPersona] = useState(false)
 
   const { data: personas = [], isFetching, refetch } = useQuery({
     queryKey: ['buscarPersonas', search],
     queryFn: async () => {
       if (search.length <= 2) return []
-      const response = await juzgadoApi.get(`libre-deuda/personas/buscar/${search}`)
-      return response.data.data
+      const response = await juzgadoApi.get(`libre-deuda/personas?search=${search}`)
+      const data = response.data
+      return Array.isArray(data) ? data : [data]
     },
     enabled: false
   })
 
   useEffect(() => {
-    if (search.length > 2) {
+    if (search.length > 2 && !hasSelectedPersona) {
       const timeoutId = setTimeout(() => {
         refetch()
         setIsTyping(false)
       }, 1000)
       return () => clearTimeout(timeoutId)
-    } else {
+    } else if (!hasSelectedPersona) {
       setShow(true)
     }
-  }, [search, refetch])
+  }, [search, refetch, hasSelectedPersona])
 
   useEffect(() => {
     if (!resetFiltro) setSearch('')
@@ -39,14 +42,16 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
     if (resetFiltro) {
       setSearch('')
       setShow(true)
+      setHasSelectedPersona(false)
     }
   }, [resetFiltro])
 
   function selectPersona (per) {
-    const identificacion = per.numero_documento ? per.numero_documento : per.cuit
+    const identificacion = per.cuit || per.numero_documento
     const nombre = deleteDuplicateName(per.apellido, per.nombre)
-    setSearch(`${identificacion} - ${nombre}`)
+    setSearchInput(`${identificacion} - ${nombre}`)
     setShow(false)
+    setHasSelectedPersona(true)
 
     if (onSelectPersona) {
       onSelectPersona({
@@ -54,6 +59,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
         nombre: per.nombre,
         apellido: per.apellido,
         dni: per.numero_documento,
+        cuit: per.cuit,
         email: per.email,
         telefono: per.telefono
       })
@@ -63,8 +69,10 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
   const handleSearchChange = (e) => {
     const value = e.target.value
     if (/^\d*$/.test(value)) {
+      setSearchInput(value)
       setSearch(value)
       setIsTyping(true)
+      setHasSelectedPersona(false)
     }
   }
 
@@ -76,7 +84,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
           type='text'
           maxLength={11}
           placeholder='CUIL'
-          value={search}
+          value={searchInput}
           onChange={handleSearchChange}
         />
 
@@ -119,7 +127,7 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
                           className='mb-1 w-full text-start py-2'
                           onClick={() => selectPersona(per)}
                         >
-                          <strong>{per.numero_documento || per.cuit}</strong> -{' '}
+                          <strong>{per.cuit || per.dni}</strong> -{' '}
                           {deleteDuplicateName(per.apellido, per.nombre)}
                         </button>
                       </li>

@@ -14,6 +14,7 @@ export const formatearData = async (acta) => {
       primerInfractor?.nombre || ''
     ),
     infractorDocumento: primerInfractor?.documento || '',
+    cuit: primerInfractor?.cuit || '',
 
     patente: acta?.vehiculo?.dominio || '',
     marca: acta?.vehiculo?.marca || '',

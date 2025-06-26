@@ -22,6 +22,7 @@ export const ResultadosForm = ({
       addToast('error', 'Hubo un error al generar el libre deuda. Intenta nuevamente.')
     }
   }
+
   return (
     <div className='text-center w-full'>
       {isLoading

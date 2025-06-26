@@ -47,7 +47,8 @@ export const useFormHandlers = (state) => {
       apellido: persona?.apellido || '',
       email: persona?.email || '',
       telefono: persona?.telefono || '',
-      dni: persona?.documento || persona?.dni || ''
+      dni: persona?.documento || persona?.dni || '',
+      cuit: persona?.cuit || persona?.cuit || ''
     }))
     setShouldDisableFields(false)
     setFromVehicleSearch(false)
@@ -103,7 +104,8 @@ export const useFormHandlers = (state) => {
           apellido: '',
           email: '',
           telefono: '',
-          dni: ''
+          dni: '',
+          cuit: ''
         }))
         setShouldDisableFields(false)
         setShowTitularAlert(true)

@@ -81,14 +81,14 @@ export const generarLibreDeudaPDF = async (data) => {
             </tr>
             ${data.numero_taxi_remis ? `<tr><th>Nº Taxi/Remis</th><td colspan="3">${data.numero_taxi_remis}</td></tr>` : ''}
             <tr>
-              <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
+              <th>Titular</th><td colspan="3">${data.infractorNombreApellido || ''} - CUIL ${data.cuit || ''}</td>
             </tr>
           </table>
         `
       : `
           <table class="info-table">
             <tr>
-              <th>Persona</th><td colspan="3">${data.infractorNombreApellido || ''} - DNI ${data.infractorDocumento || ''}</td>
+              <th>Persona</th><td colspan="3">${data.infractorNombreApellido || ''} - CUIL ${data.cuit || ''}</td>
             </tr>
           </table>
         `
