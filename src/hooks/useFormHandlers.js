@@ -48,7 +48,8 @@ export const useFormHandlers = (state) => {
       email: persona?.email || '',
       telefono: persona?.telefono || '',
       dni: persona?.documento || persona?.dni || '',
-      cuit: persona?.cuit || persona?.cuit || ''
+      cuit: persona?.cuit || '',
+      fuente: (persona?.fuente || '').toUpperCase()
     }))
     setShouldDisableFields(false)
     setFromVehicleSearch(false)
@@ -105,7 +106,8 @@ export const useFormHandlers = (state) => {
           email: '',
           telefono: '',
           dni: '',
-          cuit: ''
+          cuit: '',
+          fuente: ''
         }))
         setShouldDisableFields(false)
         setShowTitularAlert(true)
@@ -123,6 +125,10 @@ export const useFormHandlers = (state) => {
         dataToSend.append(key, val)
       }
     })
+
+    if (!formData.fuente) {
+      dataToSend.append('fuente')
+    }
 
     Object.entries(images).forEach(([key, image]) => {
       if (image instanceof File) {

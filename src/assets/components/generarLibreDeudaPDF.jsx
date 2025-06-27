@@ -114,7 +114,7 @@ export const generarLibreDeudaPDF = async (data) => {
       </div>
 
       <div class="footer">
-        La autenticidad de este certificado puede verificarse escaneando el código QR.<br />
+        La autenticidad de este certificado puede verificarse escaneando el código QR. O accediendo al siguiente link <a href="${pdfUrl}" target="_blank">${pdfUrl}</a><br />
       </div>
     </body>
   </html>

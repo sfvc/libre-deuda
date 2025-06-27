@@ -61,7 +61,8 @@ function SearchInfractor ({ resetFiltro, onSelectPersona }) {
         dni: per.numero_documento,
         cuit: per.cuit,
         email: per.email,
-        telefono: per.telefono
+        telefono: per.telefono,
+        fuente: (per.fuente || 'INTERNA').toUpperCase()
       })
     }
   }
