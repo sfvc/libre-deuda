@@ -12,12 +12,12 @@ export const useFormHandlers = (state) => {
     modoConsulta,
     images,
     setErrorMessage,
-    setEnabled,
     setIsCheckingStatus,
     setIsValidated,
     setShowResults,
     setIsVerifying,
-    setNumeroLibreDeuda
+    setNumeroLibreDeuda,
+    setShouldFetchActas
   } = state
 
   const handleInputChange = (e, tipos) => {
@@ -42,6 +42,7 @@ export const useFormHandlers = (state) => {
     setFilters((prev) => ({ ...prev, persona_id: persona.persona_id || persona.id || '' }))
     setFormData((prev) => ({
       ...prev,
+      id: persona?.id || '',
       persona_id: persona?.persona_id || persona?.id || '',
       nombre: persona?.nombre || '',
       apellido: persona?.apellido || '',
@@ -60,7 +61,8 @@ export const useFormHandlers = (state) => {
     setFilters(prev => ({
       ...prev,
       vehiculo_id: id,
-      persona_id: vehiculo.titular?.id || ''
+      persona_id: vehiculo.titular?.id || '',
+      id: vehiculo.titular?.id || ''
     }))
 
     setFormData(prev => ({
@@ -88,6 +90,8 @@ export const useFormHandlers = (state) => {
       if (vehiculo.titular) {
         setFormData(prev => ({
           ...prev,
+          id: vehiculo.titular.id,
+          cuit: vehiculo.cuit,
           persona_id: vehiculo.titular.id,
           nombre: vehiculo.titular.nombre,
           apellido: vehiculo.titular.apellido,
@@ -100,6 +104,7 @@ export const useFormHandlers = (state) => {
       } else {
         setFormData(prev => ({
           ...prev,
+          id: null,
           persona_id: null,
           nombre: '',
           apellido: '',
@@ -127,7 +132,7 @@ export const useFormHandlers = (state) => {
     })
 
     if (!formData.fuente) {
-      dataToSend.append('fuente')
+      dataToSend.append('fuente', '')
     }
 
     Object.entries(images).forEach(([key, image]) => {
@@ -146,12 +151,13 @@ export const useFormHandlers = (state) => {
       if (response?.numeroLibreDeuda) {
         setNumeroLibreDeuda(response.numeroLibreDeuda)
       }
+
+      setShouldFetchActas(false)
+
       setErrorMessage('')
-      setEnabled(false)
       setIsCheckingStatus(true)
 
       setTimeout(() => {
-        setEnabled(true)
         setIsValidated(true)
         setShowResults(true)
         setIsCheckingStatus(false)

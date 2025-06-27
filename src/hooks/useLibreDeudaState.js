@@ -39,6 +39,7 @@ export const useLibreDeudaState = () => {
   const [fromVehicleSearch, setFromVehicleSearch] = useState(false)
   const [formData, setFormData] = useState(initialFormData)
   const [filters, setFilters] = useState(initialFilters)
+  const [shouldFetchActas, setShouldFetchActas] = useState(true)
 
   const [vehicleFieldsState, setVehicleFieldsState] = useState({
     disableMarca: true,
@@ -56,6 +57,7 @@ export const useLibreDeudaState = () => {
     setShowResults(false)
     setIsValidated(false)
     setShouldDisableFields(true)
+    setShouldFetchActas(true)
     setFormData(initialFormData)
     setFilters(initialFilters)
     setVehicleFieldsState({
@@ -115,6 +117,8 @@ export const useLibreDeudaState = () => {
     setVehicleFieldsState,
     images,
     setImages,
-    resetForm
+    resetForm,
+    shouldFetchActas,
+    setShouldFetchActas
   }
 }

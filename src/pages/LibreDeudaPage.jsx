@@ -24,7 +24,6 @@ export default function LibreDeudaPage () {
     modoConsulta, setModoConsulta,
     showPersonaForm, setShowPersonaForm,
     errorMessage, setErrorMessage,
-    enabled,
     isCheckingStatus,
     showDeclarationModal, setShowDeclarationModal,
     isValidated,
@@ -40,7 +39,8 @@ export default function LibreDeudaPage () {
     filters,
     vehicleFieldsState,
     images, setImages,
-    resetForm
+    resetForm,
+    shouldFetchActas
   } = state
 
   const { handleInputChange, handlePersonaSelect, handleVehiculoSelect, handleSubmit } = handlers
@@ -53,7 +53,7 @@ export default function LibreDeudaPage () {
       }
       return getActasFilter(filters)
     },
-    enabled
+    enabled: shouldFetchActas
   })
 
   const { data: tipos, isLoading: isLoadingTipos, error: errorTipos } = useQuery({
@@ -127,7 +127,7 @@ export default function LibreDeudaPage () {
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
       libreDeudaFormData.append('vehiculo_id', formData.vehiculo_id)
-      libreDeudaFormData.append('fuente', formData.fuente)
+      libreDeudaFormData.append('fuente', formData.fuente || '')
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
       await postLibreDeuda(libreDeudaFormData)
