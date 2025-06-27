@@ -122,7 +122,7 @@ export default function LibreDeudaPage () {
         formattedData.numero_taxi_remis = formattedData.vehiculo.numero_taxi_remis
       }
 
-      const { pdfBlob, fileName } = await generarLibreDeudaPDF(formattedData)
+      const { pdfBlob, fileName, qrUrl } = await generarLibreDeudaPDF(formattedData)
       const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' })
       const libreDeudaFormData = new FormData()
       libreDeudaFormData.append('persona_id', formData.persona_id)
@@ -131,6 +131,10 @@ export default function LibreDeudaPage () {
       libreDeudaFormData.append('libre_deuda', pdfFile)
 
       await postLibreDeuda(libreDeudaFormData)
+
+      setTimeout(() => {
+        window.open(qrUrl, '_blank')
+      }, 1000)
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')

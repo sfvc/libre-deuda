@@ -123,12 +123,9 @@ export const generarLibreDeudaPDF = async (data) => {
   const pdfBlob = await convertHtmlToPdf(html)
   const fileName = `${data?.libreDeudaID}.pdf`
 
-  setTimeout(() => {
-    window.open(qrUrl, '_blank')
-  }, 1000)
-
   return {
     pdfBlob,
-    fileName
+    fileName,
+    qrUrl
   }
 }
