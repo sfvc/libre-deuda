@@ -23,7 +23,8 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
     tipo_id: '',
     numero_chasis: '',
     numero_motor: '',
-    numero_taxi_remis: ''
+    numero_taxi_remis: '',
+    cuit: ''
   })
 
   const { data: vehiculos = [], isFetching, refetch } = useQuery({
@@ -167,7 +168,7 @@ function SearchVehiculo ({ resetFiltro, onSelectVehiculo }) {
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
                 <Label htmlFor='persona_id' value='Titular' /> <strong className='obligatorio'>(*)</strong>
-                <SearchInfractor onSelectPersona={(persona) => setNuevoVehiculo({ ...nuevoVehiculo, titular_id: persona.persona_id })} />
+                <SearchInfractor onSelectPersona={(persona) => setNuevoVehiculo({ ...nuevoVehiculo, titular_id: persona.persona_id, cuit: persona.cuit })} />
               </div>
               <div>
                 <Label htmlFor='dominio' value='Dominio' /> <strong className='obligatorio'>(*)</strong>
