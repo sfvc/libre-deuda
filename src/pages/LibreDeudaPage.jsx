@@ -132,9 +132,7 @@ export default function LibreDeudaPage () {
 
       await postLibreDeuda(libreDeudaFormData)
 
-      setTimeout(() => {
-        window.open(qrUrl, '_blank')
-      }, 1000)
+      window.open(qrUrl, '_blank')
     } catch (error) {
       console.error('Error generando el libre deuda', error)
       alert('Ocurrió un error al generar el libre deuda.')
