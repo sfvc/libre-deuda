@@ -12,7 +12,7 @@ Este sistema permite a los ciudadanos consultar si poseen multas de tránsito pe
 
 ---
 
-### 1. Clonar repositorio
+### 1. Clonar repositorio.
 
 ```bash
 git clone https://github.com/sfvc/libre-deuda.git
