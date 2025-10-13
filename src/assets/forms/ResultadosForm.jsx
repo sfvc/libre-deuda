@@ -23,7 +23,6 @@ export const ResultadosForm = ({
     }
   }
 
-  // Obtener valor para enviar en la query: CUIT o Patente
   const getPagoQueryParam = () => {
     const primerRegistro = data?.data?.[0]
     if (!primerRegistro) return ''
@@ -78,6 +77,20 @@ export const ResultadosForm = ({
                   O paga de forma online dandole al boton "Pagar Deudas"
                 </p>
               </Alert>
+
+              <Button
+                className='mt-4 w-full py-2 rounded-lg text-white bg-green-500 hover:bg-green-600 transition'
+                onClick={() => {
+                  const query = getPagoQueryParam()
+                  if (query) {
+                    window.open(`https://pagosonlinejuzgado.netlify.app/?${query}`, '_blank')
+                  } else {
+                    addToast('error', 'No se encontró información para realizar el pago.')
+                  }
+                }}
+              >
+                Pagar Deudas
+              </Button>
             </div>
             )}
 
@@ -92,20 +105,6 @@ export const ResultadosForm = ({
         }}
       >
         Consultar Nuevamente
-      </Button>
-
-      <Button
-        className='mt-4 w-full py-2 rounded-lg text-white bg-green-500 hover:bg-green-600 transition'
-        onClick={() => {
-          const query = getPagoQueryParam()
-          if (query) {
-            window.open(`https://pagosonlinejuzgado.netlify.app/?${query}`, '_blank')
-          } else {
-            addToast('error', 'No se encontró información para realizar el pago.')
-          }
-        }}
-      >
-        Pagar Deudas
       </Button>
     </div>
   )
