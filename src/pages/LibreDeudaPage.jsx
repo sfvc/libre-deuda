@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Modal } from 'flowbite-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { TutorialModal } from '../assets/components/TutorialModal'
 import { generarLibreDeudaPDF } from '@/assets/components/generarLibreDeudaPDF'
 import { ModoConsulta } from '@/assets/components/ModoConsulta'
 import { DatosPersonalesForm } from '@/assets/forms/DatosPersonalesForm'
@@ -19,6 +20,7 @@ export default function LibreDeudaPage () {
   const state = useLibreDeudaState()
   const handlers = useFormHandlers(state)
   const { validateForm } = useFormValidation(state.formData, state.modoConsulta, state.images)
+  const [showTutorialModal, setShowTutorialModal] = useState(false)
 
   const {
     modoConsulta, setModoConsulta,
@@ -186,7 +188,7 @@ export default function LibreDeudaPage () {
       <DefaultNavbar />
       <main className='flex flex-1 justify-center items-center px-4 py-4'>
         <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-xl text-center space-y-4 flex flex-col items-center'>
-          <div className='bg-white md:p-6 md:shadow-xl md:rounded-lg w-full max-w-md transition-all duration-300 flex flex-col items-center'>
+          <div>
             {!showResults && <ModoConsulta modoConsulta={modoConsulta} setModoConsulta={setModoConsulta} />}
 
             {isValidated && showResults
@@ -265,6 +267,14 @@ export default function LibreDeudaPage () {
                     >
                       {isVerifying ? <Loading /> : 'Verificar y Continuar'}
                     </Button>
+
+                    <Button
+                      className='mt-3 w-full'
+                      color='light'
+                      onClick={() => setShowTutorialModal(true)}
+                    >
+                      ¿Cómo usar el sistema?
+                    </Button>
                   </div>
                 </>
                 )}
@@ -305,6 +315,11 @@ export default function LibreDeudaPage () {
                 </div>
               </Modal.Body>
             </Modal>
+
+            <TutorialModal
+              show={showTutorialModal}
+              onClose={() => setShowTutorialModal(false)}
+            />
           </div>
         </div>
       </main>
