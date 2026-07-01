@@ -90,7 +90,7 @@ export function DefaultFooter () {
 
                 <li>
                   <a
-                    href='https://juzgadoinfo.netlify.app/'
+                    href='https://info-juzgado.apps.cc.gob.ar/'
                     target='_blank'
                     rel='noopener noreferrer'
                     className='flex items-center gap-2 text-white/90 hover:text-white hover:underline'

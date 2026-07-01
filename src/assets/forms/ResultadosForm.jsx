@@ -83,7 +83,7 @@ export const ResultadosForm = ({
                 onClick={() => {
                   const query = getPagoQueryParam()
                   if (query) {
-                    window.open(`https://pagosonlinejuzgado.netlify.app/?${query}`, '_blank')
+                    window.open(`https://pagos-juzgado.apps.cc.gob.ar/?${query}`, '_blank')
                   } else {
                     addToast('error', 'No se encontró información para realizar el pago.')
                   }
